@@ -1,3 +1,4 @@
+#include "WebHandler.h"
 #include <stdio.h>
 #include <string>
 
@@ -15,7 +16,8 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    printf("Fetching METAR for %s...\n", airport_id.c_str());
+    std::string metar_string = fetch_metar(airport_id);
+    printf("%s",metar_string.c_str());
 
     return 0;
 }
