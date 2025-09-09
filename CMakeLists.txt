@@ -8,6 +8,8 @@ include_directories(include)
 
 add_executable(metar
     src/main.cpp
+    src/ArgParser.cpp
+    src/Utils.cpp
     src/WebHandler.cpp
 )
 
