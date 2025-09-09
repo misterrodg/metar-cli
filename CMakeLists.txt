@@ -15,4 +15,7 @@ add_executable(metar
 )
 
 find_package(CURL REQUIRED)
-target_link_libraries(metar PRIVATE CURL::libcurl)
+if(CURL_FOUND)
+    include_directories(${CURL_INCLUDE_DIRS})
+    target_link_libraries(metar ${CURL_LIBRARIES})
+endif()
