@@ -14,7 +14,7 @@ metar <airport_id>
 metar kfdk
 ```
 
-***Returns***
+**Returns**
 
 ```
 METAR KFDK 081955Z 11006KT 10SM CLR 24/06 A3026
