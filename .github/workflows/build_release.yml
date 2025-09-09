@@ -26,7 +26,8 @@ jobs:
       - name: Install dependencies (macOS)
         if: runner.os == 'macOS'
         run: |
-          brew install cmake curl
+          # CMake is already installed on GitHub macOS runners
+          brew install curl || true  # install curl if not present
 
       - name: Install dependencies (Windows)
         if: runner.os == 'Windows'
@@ -46,9 +47,9 @@ jobs:
         run: |
           mkdir -p release
           if [ "${{ runner.os }}" == "Windows" ]; then
-            cp build/Release/your_executable.exe release/
+            cp build/Release/metar.exe release/
           else
-            cp build/your_executable release/
+            cp build/metar release/
           fi
 
       # 6. Upload executable to GitHub Release
