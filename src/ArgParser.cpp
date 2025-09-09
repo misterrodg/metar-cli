@@ -12,10 +12,14 @@ ArgParser::ArgParser(int argc, char* argv[]) {
         std::string arg = argv[i];
 
         capitalize(arg);
+
+        if (arg == "--TRANSLATE") {
+            m_use_translation = true;
+            continue;
+        }
+
         if (check_airport(arg)) {
             m_airports.push_back(arg);
-        } else {
-            continue;
         }
     }
 }
