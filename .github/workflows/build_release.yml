@@ -28,15 +28,17 @@ jobs:
         run: |
           brew install curl || true  # CMake is already installed
 
+
       - name: Install dependencies (Windows - vcpkg)
         if: runner.os == 'Windows'
+        shell: pwsh
         run: |
           git clone https://github.com/microsoft/vcpkg.git
           cd vcpkg
           .\bootstrap-vcpkg.bat
           echo "VCPKG_ROOT=$PWD" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
           echo "CMAKE_TOOLCHAIN_FILE=$PWD\scripts\buildsystems\vcpkg.cmake" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-          $env:VCPKG_ROOT\vcpkg.exe install curl
+          & "$PWD\vcpkg.exe" install curl
 
       # 3. Configure CMake
       - name: Configure CMake
