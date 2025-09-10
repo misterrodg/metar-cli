@@ -1,6 +1,7 @@
 # metar-cli
 
 A command line tool to fetch and display METAR data from the requested airport.
+To install or uninstall, see [Installation](#installion)
 
 ## Use
 
@@ -29,7 +30,7 @@ METAR KHGR 090353Z AUTO 08004KT 10SM CLR 16/07 A3028 RMK AO2 SLP263 T01560067 $
 metar kfdk kdmw khgr
 ```
 
-** Returns **
+** Returns**
 
 ```
 METAR KFDK 092147Z 08007KT 10SM CLR 24/10 A3021
@@ -63,3 +64,31 @@ Report for KHGR:
 	Dewpoint 6C
 	Pressure 30.22 inHg
 ```
+
+## Installation
+
+### From Download
+
+- Download the latest executable for your operating system from the [Releases](https://github.com/misterrodg/metar-cli/releases) page.
+
+**Linux and macOS**
+- To install, rename the executable to `metar`, and place it in `/usr/local/bin`.
+- To uninstall, remove the executable from `/usr/local/bin`.
+
+**Windows**
+- To install, rename the executable to `metar`, place it you preferred location, and [add it to your PATH](https://stackoverflow.com/questions/4822400/register-an-exe-so-you-can-run-it-from-any-command-line-in-windows).
+- To uninstall, remove the PATH variable, and delete the executable from its location.
+
+### From Source
+
+- To install, run `./install.sh`.
+- To uninstall, `./uninstall.sh`.
+
+Building from source requires:
+
+- Linux or macOS
+- A C++ compiler
+- `make`
+- `cmake`
+- `curl`
+
