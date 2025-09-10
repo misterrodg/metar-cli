@@ -26,8 +26,7 @@ jobs:
       - name: Install dependencies (macOS)
         if: runner.os == 'macOS'
         run: |
-          brew install curl || true  # CMake is already installed
-
+          brew install curl || true
 
       - name: Install dependencies (Windows - vcpkg)
         if: runner.os == 'Windows'
@@ -41,29 +40,36 @@ jobs:
           & "$PWD\vcpkg.exe" install curl
 
       # 3. Configure CMake
-      - name: Configure CMake
-        run: |
-          if [ "${{ runner.os }}" == "Windows" ]; then
-            cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=${{ env.CMAKE_TOOLCHAIN_FILE }}
-          else
-            cmake -S . -B build
-          fi
+      - name: Configure CMake (Linux/macOS)
+        if: runner.os != 'Windows'
+        run: cmake -S . -B build
+
+      - name: Configure CMake (Windows with vcpkg)
+        if: runner.os == 'Windows'
+        run: cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=${{ env.CMAKE_TOOLCHAIN_FILE }}
 
       # 4. Build the project
       - name: Build
         run: cmake --build build --config Release
 
-      # 5. Package artifacts
-      - name: Package executable
+      # 5. Package executables
+      - name: Package executable (Windows)
+        if: runner.os == 'Windows'
         run: |
-          mkdir -p release
-          if [ "${{ runner.os }}" == "Windows" ]; then
-            cp build/Release/metar.exe release/metar-windows.exe
-          elif [ "${{ runner.os }}" == "macOS" ]; then
-            cp build/metar release/metar-macos
-          else
-            cp build/metar release/metar-linux
-          fi
+          mkdir release
+          cp build/Release/metar.exe release/metar-windows.exe
+
+      - name: Package executable (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          mkdir release
+          cp build/metar release/metar-macos
+
+      - name: Package executable (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          mkdir release
+          cp build/metar release/metar-linux
 
       # 6. Upload to GitHub Release
       - name: Upload Release Asset
@@ -72,3 +78,4 @@ jobs:
           files: release/*
         env:
           GITHUB_TOKEN: ${{ secrets.WORKFLOW_TOKEN }}
+
