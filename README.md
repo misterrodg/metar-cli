@@ -27,7 +27,7 @@ METAR KHGR 090353Z AUTO 08004KT 10SM CLR 16/07 A3028 RMK AO2 SLP263 T01560067 $
 
 
 ```
-metar kfdk kdmw khgr
+metar kfdk kdmw khgr --translate
 ```
 
 **Returns**
