@@ -1,7 +1,7 @@
 # metar-cli
 
 A command line tool to fetch and display METAR data from the requested airport.
-To install or uninstall, see [Installation](#installion)
+To install or uninstall, see Installation below.
 
 ## Use
 
@@ -30,7 +30,7 @@ METAR KHGR 090353Z AUTO 08004KT 10SM CLR 16/07 A3028 RMK AO2 SLP263 T01560067 $
 metar kfdk kdmw khgr
 ```
 
-** Returns**
+**Returns**
 
 ```
 METAR KFDK 092147Z 08007KT 10SM CLR 24/10 A3021
