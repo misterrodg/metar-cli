@@ -39,16 +39,24 @@ std::string METARParser::to_string() {
     std::tm tm = *std::localtime(&m_timestamp);
 
     oss << "Report for " << m_airport_id << ":" << "\n"
-        << "\tAt " << std::put_time(&tm, "%Y-%m-%d %H:%M") << "Z" << "\n"
-        << "\tWind from " << m_wind_direction
-        << " at " << m_wind_speed;
-    if (m_wind_gust > 0) {
-        oss << " gusting " << m_wind_gust;
+        << "\tAt " << std::put_time(&tm, "%Y-%m-%d %H:%M") << "Z" << "\n";
+    oss << "\tWind ";
+    bool skip_wind = false;
+    if (m_wind_direction == 0 && m_wind_speed == 0) {
+        oss << "calm" << "\n";
+        skip_wind = true;
     }
-    oss << " knots" << "\n";
-    if (m_variability.from_value != -1 && m_variability.to_value != -1) {
-        oss << "\tVariable from " << m_variability.from_value
-            << " to " << m_variability.to_value << "\n";
+    if (!skip_wind) {
+        oss << "from " << m_wind_direction
+            << " at " << m_wind_speed;
+        if (m_wind_gust > 0) {
+            oss << " gusting " << m_wind_gust;
+        }
+        oss << " knots" << "\n";
+        if (m_variability.from_value != -1 && m_variability.to_value != -1) {
+            oss << "\tVariable from " << m_variability.from_value
+                << " to " << m_variability.to_value << "\n";
+        }
     }
     oss << "\tVisibility ";
     bool skip_vis = false;
