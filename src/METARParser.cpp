@@ -50,7 +50,19 @@ std::string METARParser::to_string() {
         oss << "\tVariable from " << m_variability.from_value
             << " to " << m_variability.to_value << "\n";
     }
-    oss << "\tVisibility " << m_visibility << " SM" << "\n";
+    oss << "\tVisibility ";
+    bool skip_vis = false;
+    if (m_visibility == 0) {
+        oss << "not reported" << "\n";
+        skip_vis = true;
+    }
+    if (m_visibility < 0 && !skip_vis) {
+        oss << "less than ";
+        m_visibility = -m_visibility;
+    }
+    if (!skip_vis) {
+        oss << m_visibility << " SM" << "\n";
+    }
     if (m_is_clr) {
         oss << "\t" << "Clear below 12,000 AGL" << "\n";
     }
@@ -132,7 +144,10 @@ void METARParser::process_variability() {
 void METARParser::process_visibility() {
     std::smatch match_results;
     if (std::regex_search(m_metar_string, match_results, m_r_visibility)) {
-        m_visibility = parse_fractional_number(match_results[0].str());
+        m_visibility = parse_fractional_number(match_results[2].str());
+        if (match_results[1].str() == "M") {
+            m_visibility = -m_visibility;
+        }
     }
 }
 
@@ -201,7 +216,7 @@ const std::regex METARParser::m_r_airport("K[A-Z0-9]{3}");
 const std::regex METARParser::m_r_timestamp("([0-9]{2})([0-9]{2})([0-9]{2})Z");
 const std::regex METARParser::m_r_wind("([0-9]{3})([0-9]{2})(?:G([0-9]{2}))?KT");
 const std::regex METARParser::m_r_variability("([0-9]{3})V([0-9]{3})");
-const std::regex METARParser::m_r_visibility("([0-9]{1,2}|[13]/[24]|[12]\\s[13]/[24])SM");
+const std::regex METARParser::m_r_visibility("(M)?([0-9]{1,2}|[13]/[24]|[12]\\s[13]/[24])SM");
 const std::regex METARParser::m_r_clear_skies("(SKC|CLR)");
 const std::regex METARParser::m_r_cloud_cover("(FEW|SCT|BKN|OVC)([0-9]{3})");
 const std::regex METARParser::m_r_temp_dewpt("(M)?([0-9]{2})/(M)?([0-9]{2})");
