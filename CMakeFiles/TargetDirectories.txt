@@ -1,0 +1,3 @@
+/Users/kyle/Git/metar-cli/CMakeFiles/metar.dir
+/Users/kyle/Git/metar-cli/CMakeFiles/edit_cache.dir
+/Users/kyle/Git/metar-cli/CMakeFiles/rebuild_cache.dir
