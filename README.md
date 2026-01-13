@@ -9,7 +9,12 @@ To install or uninstall, see Installation below.
 metar <airport_id> [airport_id...] [-t | --translate]
 ```
 
-### Plain
+The command `metar`, followed by at least one `airport_id` will result in a [basic](#basic) output.
+An optional `--translate` (or `-t`) flag for a more detailed [translated](#translated) output.
+
+Inputs are not case sensitive: `METAR KIAD` or `metar kiad` are handled the same.
+
+### Basic
 
 ```bash
 metar kfdk kdmw khgr
@@ -23,7 +28,7 @@ METAR KDMW 090355Z AUTO 06003KT 10SM CLR 14/09 A3029 RMK AO2
 METAR KHGR 090353Z AUTO 08004KT 10SM CLR 16/07 A3028 RMK AO2 SLP263 T01560067 $
 ```
 
-### Translate
+### Translated
 
 ```bash
 # You can use the --translate or -t flag
