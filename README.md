@@ -67,7 +67,10 @@ Report for KHGR:
 
 ## Installation
 
-### From Download
+Installation can be by [Download](#download), or by 
+[Building From Source](#building-from-source).
+
+### Download
 
 - Download the latest executable for your operating system from the [Releases](https://github.com/misterrodg/metar-cli/releases) page.
 
@@ -108,5 +111,5 @@ Requirements:
 - `cmake`
 - `curl`
 
-- To build, run `./build.sh`.
+To build, run `./build.sh`.
 
