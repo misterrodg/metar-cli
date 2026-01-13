@@ -5,13 +5,13 @@ To install or uninstall, see Installation below.
 
 ## Use
 
-```
-metar <airport_id> [airport_id...] [--translate]
+```bash
+metar <airport_id> [airport_id...] [-t | --translate]
 ```
 
 ### Plain
 
-```
+```bash
 metar kfdk kdmw khgr
 ```
 
@@ -25,9 +25,9 @@ METAR KHGR 090353Z AUTO 08004KT 10SM CLR 16/07 A3028 RMK AO2 SLP263 T01560067 $
 
 ### Translate
 
-```
+```bash
+# You can use the --translate or -t flag
 metar kfdk kdmw khgr --translate
-metar kfdk kdmw khgr -t
 ```
 
 **Returns**
@@ -72,23 +72,41 @@ Report for KHGR:
 - Download the latest executable for your operating system from the [Releases](https://github.com/misterrodg/metar-cli/releases) page.
 
 **Linux and macOS**
-- To install, rename the executable to `metar`, and place it in `/usr/local/bin`.
-- To uninstall, remove the executable from `/usr/local/bin`.
+
+Installation and removal is simple with the `./install.sh` and `./uninstall.sh`
+scripts available in the project root.
+
+Install
+
+1. Rename the executable to `metar`.
+2. Make it executable: `chmod +x metar`.
+3. Move it to your path: `sudo mv metar /usr/local/bin`.
+
+Uninstall
+
+1. Remove the executable from `/usr/local/bin`.
 
 **Windows**
-- To install, rename the executable to `metar`, place it you preferred location, and [add it to your PATH](https://stackoverflow.com/questions/4822400/register-an-exe-so-you-can-run-it-from-any-command-line-in-windows).
-- To uninstall, remove the PATH variable, and delete the executable from its location.
 
-### From Source
+Install
 
-- To install, run `./install.sh`.
-- To uninstall, `./uninstall.sh`.
+1. Rename the executable to `metar`.
+2. Place it in the location of your choice.
+2. [Add it to your PATH](https://stackoverflow.com/questions/4822400/register-an-exe-so-you-can-run-it-from-any-command-line-in-windows).
 
-Building from source requires:
+Uninstall
+
+1. Remove the PATH variable, and delete the executable from its location.
+
+### Building From Source
+
+Requirements:
 
 - Linux or macOS
 - A C++ compiler
 - `make`
 - `cmake`
 - `curl`
+
+- To build, run `./build.sh`.
 
