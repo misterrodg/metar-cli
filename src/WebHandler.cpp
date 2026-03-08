@@ -4,14 +4,12 @@
 #include <curl/curl.h>
 #include <curl/easy.h>
 
-size_t write_callback(
-    void* contents, size_t size, size_t nmemb, void* userp
-) {
+size_t write_callback(void* contents, size_t size, size_t nmemb, void* userp) {
     ((std::string*)userp)->append((char*)contents, size * nmemb);
     return size * nmemb;
 }
 
-std::string fetch_metar(const std::string &airport_id) {
+std::string fetch_metar(const std::string& airport_id) {
     CURL* curl;
     CURLcode res;
     std::string read_buffer;

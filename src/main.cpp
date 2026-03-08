@@ -1,7 +1,7 @@
 #include "ArgParser.h"
 #include "METARParser.h"
-#include "WebHandler.h"
 #include "Utils.h"
+#include "WebHandler.h"
 #include <stdio.h>
 #include <string>
 
@@ -22,7 +22,7 @@ int main(int argc, char* argv[]) {
 
     std::string metar_string = fetch_metar(airport_string);
 
-    printf("%s\n",metar_string.c_str());
+    printf("%s\n", metar_string.c_str());
 
     if (use_translation) {
         std::vector<std::string> metars = split_strings(metar_string, '\n');
