@@ -32,7 +32,7 @@ std::string ArgParser::get_airport_string() const {
 }
 
 bool ArgParser::check_airport(const std::string& airport_string) {
-    std::regex airport_pattern("K[A-Z0-9]{3}");
+    std::regex airport_pattern("[A-Z0-9]{4}");
     if (std::regex_match(airport_string, airport_pattern)) {
         return true;
     }
