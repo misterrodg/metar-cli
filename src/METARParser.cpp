@@ -11,10 +11,10 @@
 METARParser::METARParser(const std::string& metar)
     : metar_string_(metar), station_id_(""), report_time_(std::nullopt),
       wind_direction_(0), wind_speed_(0), wind_is_variable_(false),
-      wind_gust_(std::nullopt), variability_(std::nullopt),
-      visibility_(std::nullopt), is_clr_(false), is_skc_(false),
-      cloud_coverage_(), temperature_(std::nullopt), dewpoint_(std::nullopt),
-      pressure_(std::nullopt) {
+      wind_gust_(std::nullopt), variability_(std::nullopt), is_cavok_(false),
+      visibility_(std::nullopt), is_clr_(false), is_skc_(false), is_nsc_(false),
+      is_ncd_(false), cloud_coverage_(), temperature_(std::nullopt),
+      dewpoint_(std::nullopt), pressure_(std::nullopt) {
     process_station();
     process_report_time();
     process_wind();
@@ -79,6 +79,14 @@ std::string METARParser::to_string() const {
 
     if (is_skc_) {
         oss << "\tSky clear\n";
+    }
+
+    if (is_nsc_) {
+        oss << "\tNo significant cloud\n";
+    }
+
+    if (is_ncd_) {
+        oss << "\tNo cloud detected\n";
     }
 
     if (!cloud_coverage_.empty()) {
@@ -164,6 +172,13 @@ void METARParser::process_variability() {
 
 void METARParser::process_visibility() {
     std::smatch match_results;
+
+    if (std::regex_search(metar_string_, match_results, cavok_regex_)) {
+        is_cavok_ = true;
+        visibility_ = Visibility{6, false, true};
+        return;
+    }
+
     if (std::regex_search(metar_string_, match_results, visibility_regex_)) {
         std::optional<double> parsed =
             parse_fractional_number(match_results[2].str());
@@ -191,14 +206,29 @@ void METARParser::process_visibility() {
 }
 
 void METARParser::process_cloud_cover() {
+    if (is_cavok_) {
+        is_skc_ = true;
+        return;
+    }
+
     std::smatch match_results;
     if (std::regex_search(metar_string_, match_results, clear_skies_regex_)) {
-        if (match_results[1].str() == "CLR") {
+        std::string sky = match_results[1].str();
+
+        if (sky == "CLR") {
             is_clr_ = true;
             return;
         }
-        if (match_results[1].str() == "SKC") {
+        if (sky == "SKC") {
             is_skc_ = true;
+            return;
+        }
+        if (sky == "NSC") {
+            is_nsc_ = true;
+            return;
+        }
+        if (sky == "NCD") {
+            is_ncd_ = true;
             return;
         }
     }
@@ -264,6 +294,9 @@ const std::regex
 
 const std::regex METARParser::variability_regex_(
     RegexUtils::make_token_regex(Patterns::VARIABILITY));
+
+const std::regex
+    METARParser::cavok_regex_(RegexUtils::make_token_regex(Patterns::CAVOK));
 
 const std::regex METARParser::visibility_regex_(
     RegexUtils::make_token_regex(Patterns::VISIBILITY));

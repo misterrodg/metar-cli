@@ -45,6 +45,7 @@ private:
     static const std::regex timestamp_regex_;
     static const std::regex wind_regex_;
     static const std::regex variability_regex_;
+    static const std::regex cavok_regex_;
     static const std::regex visibility_regex_;
     static const std::regex visibility_meters_regex_;
     static const std::regex clear_skies_regex_;
@@ -65,10 +66,13 @@ private:
 
     std::optional<Variability> variability_;
 
+    bool is_cavok_;
     std::optional<Visibility> visibility_;
 
     bool is_clr_;
     bool is_skc_;
+    bool is_nsc_;
+    bool is_ncd_;
     std::vector<CloudCoverage> cloud_coverage_;
 
     std::optional<int> temperature_;
