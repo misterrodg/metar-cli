@@ -1,17 +1,19 @@
 #ifndef UTILS_H
 #define UTILS_H
 
+#include <optional>
 #include <string>
+#include <string_view>
 #include <vector>
 
-std::string join_strings(const std::vector<std::string>& strings,
-                         const std::string& delimiter);
+std::string join_strings(const std::vector<std::string>& inputs,
+                         std::string_view delimiter);
 
-std::vector<std::string> split_strings(const std::string& string,
-                                       const char& delimiter);
+std::vector<std::string> split_strings(const std::string& input,
+                                       char delimiter);
 
-void capitalize(std::string& s);
+void to_uppercase(std::string& input);
 
-float parse_fractional_number(const std::string& s);
+std::optional<double> parse_fractional_number(const std::string& input);
 
 #endif

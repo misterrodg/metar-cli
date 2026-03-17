@@ -1,20 +1,22 @@
 #include "METARParser.h"
+#include "Patterns.h"
+#include "RegexUtils.h"
 #include "Utils.h"
-#include <cstddef>
-#include <cstring>
-#include <ctime>
+
 #include <iomanip>
 #include <regex>
 #include <sstream>
+#include <string>
 
 METARParser::METARParser(const std::string& metar)
-    : m_metar_string(metar), m_airport_id(""), m_timestamp((time_t)(-1)),
-      m_wind_direction(0), m_wind_speed(0), m_wind_gust(-1),
-      m_variability({-1, -1}), m_visibility(0.0), m_is_clr(false),
-      m_is_skc(false), m_cloud_coverage(), m_temperature(0), m_dewpoint(0),
-      m_pressure(0.0) {
-    process_airport();
-    process_timestamp();
+    : metar_string_(metar), station_id_(""), report_time_(std::nullopt),
+      wind_direction_(0), wind_speed_(0), wind_is_variable_(false),
+      wind_gust_(std::nullopt), variability_(std::nullopt),
+      visibility_(std::nullopt), is_clr_(false), is_skc_(false),
+      cloud_coverage_(), temperature_(std::nullopt), dewpoint_(std::nullopt),
+      pressure_(std::nullopt) {
+    process_station();
+    process_report_time();
     process_wind();
     process_variability();
     process_visibility();
@@ -23,150 +25,193 @@ METARParser::METARParser(const std::string& metar)
     process_pressure();
 }
 
-std::string METARParser::to_string() {
+std::string METARParser::to_string() const {
     std::ostringstream oss;
 
-    std::tm tm = *std::localtime(&m_timestamp);
+    oss << "Report for " << station_id_ << ":\n";
 
-    oss << "Report for " << m_airport_id << ":" << "\n"
-        << "\tAt " << std::put_time(&tm, "%Y-%m-%d %H:%M") << "Z" << "\n";
+    if (report_time_.has_value()) {
+        oss << "\tAt " << std::setfill('0') << std::setw(2) << report_time_->day
+            << " " << std::setfill('0') << std::setw(2) << report_time_->hour
+            << ":" << std::setfill('0') << std::setw(2) << report_time_->minute
+            << "Z\n";
+    } else {
+        oss << "\tAt unknown time\n";
+    }
+
     oss << "\tWind ";
-    bool skip_wind = false;
-    if (m_wind_direction == 0 && m_wind_speed == 0) {
-        oss << "calm" << "\n";
-        skip_wind = true;
-    }
-    if (!skip_wind) {
-        oss << "from " << m_wind_direction << " at " << m_wind_speed;
-        if (m_wind_gust > 0) {
-            oss << " gusting " << m_wind_gust;
+    if (wind_direction_ == 0 && wind_speed_ == 0 && !wind_is_variable_) {
+        oss << "calm\n";
+    } else if (wind_is_variable_) {
+        oss << "variable at " << wind_speed_;
+        if (wind_gust_.has_value()) {
+            oss << " gusting " << wind_gust_.value();
         }
-        oss << " knots" << "\n";
-        if (m_variability.from_value != -1 && m_variability.to_value != -1) {
-            oss << "\tVariable from " << m_variability.from_value << " to "
-                << m_variability.to_value << "\n";
+        oss << " knots\n";
+    } else {
+        oss << "from " << wind_direction_ << " at " << wind_speed_;
+        if (wind_gust_.has_value()) {
+            oss << " gusting " << wind_gust_.value();
         }
-    }
-    oss << "\tVisibility ";
-    bool skip_vis = false;
-    if (m_visibility == 0) {
-        oss << "not reported" << "\n";
-        skip_vis = true;
-    }
-    if (m_visibility < 0 && !skip_vis) {
-        oss << "less than ";
-        m_visibility = -m_visibility;
-    }
-    if (!skip_vis) {
-        oss << m_visibility << " SM" << "\n";
-    }
-    if (m_is_clr) {
-        oss << "\t" << "Clear below 12,000 AGL" << "\n";
-    }
-    if (m_is_skc) {
-        oss << "\t" << "Sky clear" << "\n";
-    }
-    if (!m_cloud_coverage.empty()) {
-        oss << "\tCloud cover:" << "\n";
-        int length = m_cloud_coverage.size();
-        for (int i = length - 1; i >= 0; i--) {
-            std::string coverage = m_cloud_coverage[i].coverage;
-            int altitude = m_cloud_coverage[i].altitude;
+        oss << " knots\n";
 
-            oss << "\t\t" << m_cloud_coverage[i].coverage << " at "
-                << m_cloud_coverage[i].altitude << " AGL";
-            if (m_cloud_coverage[i].is_ceiling) {
-                oss << " --ceiling-- ";
+        if (variability_.has_value()) {
+            oss << "\tVariable from " << variability_->from_value << " to "
+                << variability_->to_value << "\n";
+        }
+    }
+
+    oss << "\tVisibility ";
+    if (!visibility_.has_value()) {
+        oss << "not reported\n";
+    } else {
+        if (visibility_->less_than) {
+            oss << "less than ";
+        } else if (visibility_->greater_or_equal) {
+            oss << "at least ";
+        }
+        oss << visibility_->distance_sm << " SM\n";
+    }
+
+    if (is_clr_) {
+        oss << "\tClear below 12,000 AGL\n";
+    }
+
+    if (is_skc_) {
+        oss << "\tSky clear\n";
+    }
+
+    if (!cloud_coverage_.empty()) {
+        oss << "\tCloud cover:\n";
+        for (int i = static_cast<int>(cloud_coverage_.size()) - 1; i >= 0;
+             --i) {
+            const CloudCoverage& layer = cloud_coverage_[i];
+
+            oss << "\t\t" << layer.coverage << " at " << layer.altitude
+                << " AGL";
+            if (layer.is_ceiling) {
+                oss << " --ceiling--";
             }
             oss << "\n";
         }
     }
-    oss << "\tTemperature " << m_temperature << "C" << "\n"
-        << "\tDewpoint " << m_dewpoint << "C" << "\n"
-        << "\tPressure " << m_pressure << " inHg" << "\n";
+
+    if (temperature_.has_value()) {
+        oss << "\tTemperature " << temperature_.value() << "C\n";
+    } else {
+        oss << "\tTemperature not reported\n";
+    }
+
+    if (dewpoint_.has_value()) {
+        oss << "\tDewpoint " << dewpoint_.value() << "C\n";
+    } else {
+        oss << "\tDewpoint not reported\n";
+    }
+
+    if (pressure_.has_value()) {
+        oss << "\tPressure " << pressure_->pressure << " " << pressure_->unit
+            << "\n";
+    } else {
+        oss << "\tPressure not reported\n";
+    }
+
     return oss.str();
 }
 
-void METARParser::process_airport() {
+void METARParser::process_station() {
     std::smatch match_results;
-    if (std::regex_search(m_metar_string, match_results, m_r_airport)) {
-        m_airport_id = match_results[0].str();
+    if (std::regex_search(metar_string_, match_results, station_regex_)) {
+        station_id_ = match_results[0].str();
     }
 }
 
-void METARParser::process_timestamp() {
+void METARParser::process_report_time() {
     std::smatch match_results;
-    if (std::regex_search(m_metar_string, match_results, m_r_timestamp)) {
-        int day = std::stoi(match_results[1]);
-        int hour = std::stoi(match_results[2]);
-        int minute = std::stoi(match_results[3]);
+    if (std::regex_search(metar_string_, match_results, timestamp_regex_)) {
+        int day = std::stoi(match_results[1].str());
+        int hour = std::stoi(match_results[2].str());
+        int minute = std::stoi(match_results[3].str());
 
-        std::time_t now = std::time(nullptr);
-        std::tm tm_now = *std::gmtime(&now);
-
-        std::tm tm_target = tm_now;
-        tm_target.tm_mday = day;
-        tm_target.tm_hour = hour;
-        tm_target.tm_min = minute;
-        tm_target.tm_sec = 0;
-
-        m_timestamp = std::mktime(&tm_target);
+        report_time_ = ReportTime{day, hour, minute};
     }
 }
 
 void METARParser::process_wind() {
     std::smatch match_results;
-    if (std::regex_search(m_metar_string, match_results, m_r_wind)) {
-        m_wind_direction = std::stoi(match_results[1].str());
-        m_wind_speed = std::stoi(match_results[2]);
-        m_wind_gust =
-            (match_results[3].matched ? std::stoi(match_results[3].str()) : -1);
+    if (std::regex_search(metar_string_, match_results, wind_regex_)) {
+        std::string direction = match_results[1].str();
+
+        wind_is_variable_ = (direction == "VRB");
+        if (!wind_is_variable_) {
+            wind_direction_ = std::stoi(direction);
+        }
+
+        wind_speed_ = std::stoi(match_results[2].str());
+
+        if (match_results[3].matched) {
+            wind_gust_ = std::stoi(match_results[3].str());
+        }
     }
 }
 
 void METARParser::process_variability() {
     std::smatch match_results;
-    if (std::regex_search(m_metar_string, match_results, m_r_variability)) {
-        if (match_results[0].matched) {
-            Variability v = {std::stoi(match_results[1].str()),
-                             std::stoi(match_results[2].str())};
-            m_variability = v;
-        }
+    if (std::regex_search(metar_string_, match_results, variability_regex_)) {
+        variability_ = Variability{std::stoi(match_results[1].str()),
+                                   std::stoi(match_results[2].str())};
     }
 }
 
 void METARParser::process_visibility() {
     std::smatch match_results;
-    if (std::regex_search(m_metar_string, match_results, m_r_visibility)) {
-        m_visibility = parse_fractional_number(match_results[2].str());
-        if (match_results[1].str() == "M") {
-            m_visibility = -m_visibility;
+    if (std::regex_search(metar_string_, match_results, visibility_regex_)) {
+        std::optional<double> parsed =
+            parse_fractional_number(match_results[2].str());
+
+        if (parsed.has_value()) {
+            visibility_ =
+                Visibility{parsed.value(), match_results[1].matched, false};
         }
+        return;
+    }
+
+    if (std::regex_search(metar_string_, match_results,
+                          visibility_meters_regex_)) {
+        int meters = std::stoi(match_results[0].str());
+
+        if (meters == 9999) {
+            visibility_ = Visibility{6.0, false, true};
+            return;
+        }
+
+        double m_to_sm = 1609.344;
+        double sm = static_cast<double>(meters) / m_to_sm;
+        visibility_ = Visibility{sm, false, false};
     }
 }
 
 void METARParser::process_cloud_cover() {
     std::smatch match_results;
-    if (std::regex_search(m_metar_string, match_results, m_r_clear_skies)) {
+    if (std::regex_search(metar_string_, match_results, clear_skies_regex_)) {
         if (match_results[1].str() == "CLR") {
-            m_is_clr = true;
+            is_clr_ = true;
             return;
         }
         if (match_results[1].str() == "SKC") {
-            m_is_skc = true;
+            is_skc_ = true;
             return;
         }
     }
 
-    std::sregex_iterator next(m_metar_string.begin(), m_metar_string.end(),
-                              m_r_cloud_cover);
+    std::sregex_iterator next(metar_string_.begin(), metar_string_.end(),
+                              cloud_cover_regex_);
     std::sregex_iterator end;
 
     bool ceiling_set = false;
     while (next != end) {
         std::smatch match = *next;
 
-        std::string cover = match.str(1);
+        std::string cover = match[1].str();
         bool is_ceiling = false;
 
         if ((cover == "BKN" || cover == "OVC") && !ceiling_set) {
@@ -174,41 +219,69 @@ void METARParser::process_cloud_cover() {
             ceiling_set = true;
         }
 
-        CloudCoverage cc = {std::stoi(match.str(2)) * 100, cover, is_ceiling};
+        cloud_coverage_.push_back(
+            CloudCoverage{std::stoi(match[2].str()) * 100, cover, is_ceiling});
 
-        m_cloud_coverage.push_back(cc);
-        next++;
+        ++next;
     }
 }
 
 void METARParser::process_temp_dewpt() {
     std::smatch match_results;
-    if (std::regex_search(m_metar_string, match_results, m_r_temp_dewpt)) {
-        bool is_negative_t = match_results[1].matched;
-        bool is_negative_d = match_results[3].matched;
+    if (std::regex_search(metar_string_, match_results, temp_dewpt_regex_)) {
+        bool is_negative_temp = match_results[1].matched;
+        bool is_negative_dwpt = match_results[3].matched;
+
         int temp = std::stoi(match_results[2].str());
-        int dewpt = std::stoi(match_results[4].str());
-        m_temperature = (is_negative_t ? -temp : temp);
-        m_dewpoint = (is_negative_d ? -dewpt : dewpt);
+        int dwpt = std::stoi(match_results[4].str());
+
+        temperature_ = (is_negative_temp ? -temp : temp);
+        dewpoint_ = (is_negative_dwpt ? -dwpt : dwpt);
     }
 }
 
 void METARParser::process_pressure() {
     std::smatch match_results;
-    if (std::regex_search(m_metar_string, match_results, m_r_pressure)) {
-        int pressure = std::stoi(match_results[1].str());
-        m_pressure = (float)pressure / 100;
+    if (std::regex_search(metar_string_, match_results, pressure_in_regex_)) {
+        int pressure_raw = std::stoi(match_results[1].str());
+        pressure_ = Pressure{static_cast<double>(pressure_raw) / 100.0, "inHg"};
+        return;
+    }
+    if (std::regex_search(metar_string_, match_results, pressure_mb_regex_)) {
+        int pressure_raw = std::stoi(match_results[1].str());
+        pressure_ = Pressure{static_cast<double>(pressure_raw), "mb"};
     }
 }
 
-const std::regex METARParser::m_r_airport("K[A-Z0-9]{3}");
-const std::regex METARParser::m_r_timestamp("([0-9]{2})([0-9]{2})([0-9]{2})Z");
+const std::regex METARParser::station_regex_(
+    RegexUtils::make_token_regex(Patterns::STATION));
+
+const std::regex METARParser::timestamp_regex_(
+    RegexUtils::make_token_regex(Patterns::TIMESTAMP));
+
 const std::regex
-    METARParser::m_r_wind("([0-9]{3})([0-9]{2})(?:G([0-9]{2}))?KT");
-const std::regex METARParser::m_r_variability("([0-9]{3})V([0-9]{3})");
-const std::regex METARParser::m_r_visibility(
-    "(M)?([0-9]{1,2}|[13]/[24]|[12]\\s[13]/[24])SM");
-const std::regex METARParser::m_r_clear_skies("(SKC|CLR)");
-const std::regex METARParser::m_r_cloud_cover("(FEW|SCT|BKN|OVC)([0-9]{3})");
-const std::regex METARParser::m_r_temp_dewpt("(M)?([0-9]{2})/(M)?([0-9]{2})");
-const std::regex METARParser::m_r_pressure("A([0-9]{4})");
+    METARParser::wind_regex_(RegexUtils::make_token_regex(Patterns::WIND));
+
+const std::regex METARParser::variability_regex_(
+    RegexUtils::make_token_regex(Patterns::VARIABILITY));
+
+const std::regex METARParser::visibility_regex_(
+    RegexUtils::make_token_regex(Patterns::VISIBILITY));
+
+const std::regex METARParser::visibility_meters_regex_(
+    RegexUtils::make_token_regex(Patterns::VISIBILITY_METERS));
+
+const std::regex METARParser::clear_skies_regex_(
+    RegexUtils::make_token_regex(Patterns::CLEAR_SKIES));
+
+const std::regex METARParser::cloud_cover_regex_(
+    RegexUtils::make_token_regex(Patterns::CLOUD_COVER));
+
+const std::regex METARParser::temp_dewpt_regex_(
+    RegexUtils::make_token_regex(Patterns::TEMP_DEWPT));
+
+const std::regex METARParser::pressure_in_regex_(
+    RegexUtils::make_token_regex(Patterns::PRESSURE_IN));
+
+const std::regex METARParser::pressure_mb_regex_(
+    RegexUtils::make_token_regex(Patterns::PRESSURE_MB));

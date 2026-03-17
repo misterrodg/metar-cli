@@ -5,27 +5,27 @@
 #include <sstream>
 #include <string>
 
-std::string join_strings(const std::vector<std::string>& strings,
-                         const std::string& delimiter) {
-    if (strings.empty()) {
+std::string join_strings(const std::vector<std::string>& inputs,
+                         std::string_view delimiter) {
+    if (inputs.empty()) {
         return "";
     }
 
-    std::stringstream ss;
-    for (size_t i = 0; i < strings.size(); ++i) {
-        ss << strings[i];
-        if (i < strings.size() - 1) {
-            ss << delimiter;
+    std::ostringstream oss;
+    for (size_t i = 0; i < inputs.size(); ++i) {
+        oss << inputs[i];
+        if (i + 1 < inputs.size()) {
+            oss << delimiter;
         }
     }
-    return ss.str();
+    return oss.str();
 }
 
-std::vector<std::string> split_strings(const std::string& string,
-                                       const char& delimiter) {
+std::vector<std::string> split_strings(const std::string& input,
+                                       char delimiter) {
     std::vector<std::string> tokens;
     std::string token;
-    std::stringstream ss(string);
+    std::stringstream ss(input);
 
     while (std::getline(ss, token, delimiter)) {
         tokens.push_back(token);
@@ -34,33 +34,47 @@ std::vector<std::string> split_strings(const std::string& string,
     return tokens;
 }
 
-void capitalize(std::string& s) {
-    std::transform(s.begin(), s.end(), s.begin(),
+void to_uppercase(std::string& input) {
+    std::transform(input.begin(), input.end(), input.begin(),
                    [](unsigned char c) { return std::toupper(c); });
 }
 
-float parse_fractional_number(const std::string& s) {
-    std::istringstream iss(s);
+std::optional<double> parse_fractional_number(const std::string& input) {
+    std::istringstream iss(input);
+
     int whole = 0;
     int num = 0;
     int den = 1;
+    char slash = '\0';
 
     if (iss >> whole) {
-        if (iss.peek() == ' ') {
-            iss.get();
-            if (iss >> num && iss.get() == '/' && iss >> den && den != 0) {
-                return static_cast<float>(whole) +
-                       static_cast<float>(num) / den;
+        iss >> std::ws;
+
+        if (iss.eof()) {
+            return static_cast<double>(whole);
+        }
+
+        if ((iss >> num) && (iss >> slash) && slash == '/' && (iss >> den) &&
+            den != 0) {
+            iss >> std::ws;
+            if (iss.eof()) {
+                return static_cast<double>(whole) +
+                       static_cast<double>(num) / den;
             }
         }
-        return static_cast<float>(whole);
+        return std::nullopt;
     }
 
     iss.clear();
-    iss.str(s);
-    if (iss >> num && iss.get() == '/' && iss >> den && den != 0) {
-        return static_cast<float>(num) / den;
+    iss.str(input);
+
+    if ((iss >> num) && (iss >> slash) && slash == '/' && (iss >> den) &&
+        den != 0) {
+        iss >> std::ws;
+        if (iss.eof()) {
+            return static_cast<double>(num) / den;
+        }
     }
 
-    return -1;
+    return std::nullopt;
 }

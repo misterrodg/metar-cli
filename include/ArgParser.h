@@ -6,15 +6,23 @@
 
 class ArgParser {
 public:
-    ArgParser(int argc, char* argv[]);
-    bool get_use_translation() const;
+    ArgParser(int argc, char* const argv[]);
+
+    bool should_translate() const;
+
+    const std::vector<std::string>& get_airports() const;
     std::string get_airport_string() const;
 
-private:
-    bool m_use_translation;
-    std::vector<std::string> m_airports;
+    bool has_invalid_args() const;
+    const std::vector<std::string>& get_invalid_args() const;
+    std::string get_invalid_arg_string() const;
 
-    bool check_airport(const std::string& airport_string);
+private:
+    bool should_translate_;
+    std::vector<std::string> airports_;
+    std::vector<std::string> invalid_args_;
+
+    static bool check_airport(const std::string& airport_string);
 };
 
 #endif

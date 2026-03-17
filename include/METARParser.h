@@ -1,7 +1,7 @@
 #ifndef METAR_PARSER_H
 #define METAR_PARSER_H
 
-#include <ctime>
+#include <optional>
 #include <regex>
 #include <string>
 #include <vector>
@@ -12,45 +12,71 @@ struct CloudCoverage {
     bool is_ceiling;
 };
 
+struct Pressure {
+    double pressure;
+    std::string unit;
+};
+
+struct ReportTime {
+    int day;
+    int hour;
+    int minute;
+};
+
 struct Variability {
     int from_value;
     int to_value;
 };
 
+struct Visibility {
+    double distance_sm;
+    bool less_than;
+    bool greater_or_equal;
+};
+
 class METARParser {
 public:
-    METARParser(const std::string& metar);
+    explicit METARParser(const std::string& metar);
 
-    std::string to_string();
+    std::string to_string() const;
 
 private:
-    static const std::regex m_r_airport;
-    static const std::regex m_r_timestamp;
-    static const std::regex m_r_wind;
-    static const std::regex m_r_variability;
-    static const std::regex m_r_visibility;
-    static const std::regex m_r_clear_skies;
-    static const std::regex m_r_cloud_cover;
-    static const std::regex m_r_temp_dewpt;
-    static const std::regex m_r_pressure;
+    static const std::regex station_regex_;
+    static const std::regex timestamp_regex_;
+    static const std::regex wind_regex_;
+    static const std::regex variability_regex_;
+    static const std::regex visibility_regex_;
+    static const std::regex visibility_meters_regex_;
+    static const std::regex clear_skies_regex_;
+    static const std::regex cloud_cover_regex_;
+    static const std::regex temp_dewpt_regex_;
+    static const std::regex pressure_in_regex_;
+    static const std::regex pressure_mb_regex_;
 
-    std::string m_metar_string;
-    std::string m_airport_id;
-    time_t m_timestamp;
-    int m_wind_direction;
-    int m_wind_speed;
-    int m_wind_gust;
-    Variability m_variability;
-    float m_visibility;
-    bool m_is_clr;
-    bool m_is_skc;
-    std::vector<CloudCoverage> m_cloud_coverage;
-    int m_temperature;
-    int m_dewpoint;
-    float m_pressure;
+    std::string metar_string_;
+    std::string station_id_;
 
-    void process_airport();
-    void process_timestamp();
+    std::optional<ReportTime> report_time_;
+
+    int wind_direction_;
+    int wind_speed_;
+    bool wind_is_variable_;
+    std::optional<int> wind_gust_;
+
+    std::optional<Variability> variability_;
+
+    std::optional<Visibility> visibility_;
+
+    bool is_clr_;
+    bool is_skc_;
+    std::vector<CloudCoverage> cloud_coverage_;
+
+    std::optional<int> temperature_;
+    std::optional<int> dewpoint_;
+    std::optional<Pressure> pressure_;
+
+    void process_station();
+    void process_report_time();
     void process_wind();
     void process_variability();
     void process_visibility();
