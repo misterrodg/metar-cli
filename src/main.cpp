@@ -1,7 +1,9 @@
 #include "ArgParser.h"
 #include "METARParser.h"
+#include "Spinner.h"
 #include "Utils.h"
 #include "WebHandler.h"
+
 #include <cstdio>
 #include <stdio.h>
 #include <string>
@@ -27,7 +29,11 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
+    Spinner spinner;
+
+    spinner.start();
     std::string metar_string = fetch_metar(airport_string);
+    spinner.stop();
 
     printf("%s\n", metar_string.c_str());
 

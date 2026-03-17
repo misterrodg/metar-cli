@@ -11,6 +11,7 @@ add_executable(metar
     src/main.cpp
     src/ArgParser.cpp
     src/METARParser.cpp
+    src/Spinner.cpp
     src/Utils.cpp
     src/WebHandler.cpp
 )
