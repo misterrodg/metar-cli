@@ -13,7 +13,7 @@ struct CloudCoverage {
 
 struct Pressure {
     double pressure;
-    std::string unit;
+    char unit;
 };
 
 struct ReportTime {
@@ -36,6 +36,7 @@ struct Visibility {
 struct Wind {
     int direction;
     int speed;
+    std::string unit;
     bool is_variable;
     std::optional<int> gust;
     std::optional<Variability> variability;
