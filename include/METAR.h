@@ -28,7 +28,8 @@ struct Variability {
 };
 
 struct Visibility {
-    double distance_sm;
+    double value;
+    std::string unit;
     bool less_than;
     bool greater_or_equal;
 };
@@ -46,7 +47,7 @@ struct METAR {
     std::string type;
     std::string station_id;
     std::optional<ReportTime> report_time;
-    std::string modifier;
+    std::vector<std::string> modifiers;
     std::optional<Wind> wind;
     bool is_cavok;
     std::optional<Visibility> visibility;
