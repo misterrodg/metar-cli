@@ -12,6 +12,7 @@ add_executable(metar
     src/ArgParser.cpp
     src/METARParser.cpp
     src/Spinner.cpp
+    src/TokenStream.cpp
     src/Utils.cpp
     src/WebHandler.cpp
 )
