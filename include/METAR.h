@@ -13,7 +13,7 @@ struct CloudCoverage {
 
 struct Pressure {
     double pressure;
-    char unit;
+    std::string unit;
 };
 
 struct ReportTime {
