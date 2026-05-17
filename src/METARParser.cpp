@@ -29,39 +29,29 @@ METARParser::METARParser(const std::string& metar)
     parse_sky_block(tokens);
     parse_temp_dwpt(tokens);
     parse_pressure(tokens);
-    parse_remark(tokens);
-}
-
-bool METARParser::is_report_type(std::string_view s) {
-    return s == "METAR" || s == "SPECI";
 }
 
 void METARParser::parse_type(TokenStream& ts) {
-    if (ts.eof() || !is_report_type(ts.peek())) {
+    std::string_view next = ts.peek();
+    if (ts.eof() || !(next == "METAR" || next == "SPECI")) {
         return;
     }
     metar_.type = ts.consume();
 }
 
-bool METARParser::is_station_id(std::string_view s) {
-    return std::regex_match(s.begin(), s.end(),
-                            RegexUtils::make_token_regex(Patterns::STATION));
-}
-
 void METARParser::parse_station_id(TokenStream& ts) {
-    if (ts.eof() || !is_station_id(ts.peek())) {
+    if (ts.eof() ||
+        !std::regex_match(ts.peek().begin(), ts.peek().end(),
+                          RegexUtils::make_token_regex(Patterns::STATION))) {
         return;
     }
     metar_.station_id = ts.consume();
 }
 
-bool METARParser::is_report_time(std::string_view s) {
-    return std::regex_match(s.begin(), s.end(),
-                            RegexUtils::make_token_regex(Patterns::TIMESTAMP));
-}
-
 void METARParser::parse_report_time(TokenStream& ts) {
-    if (ts.eof() || !is_report_time(ts.peek())) {
+    if (ts.eof() ||
+        !std::regex_match(ts.peek().begin(), ts.peek().end(),
+                          RegexUtils::make_token_regex(Patterns::TIMESTAMP))) {
         return;
     }
 
@@ -77,29 +67,20 @@ void METARParser::parse_report_time(TokenStream& ts) {
     }
 }
 
-bool METARParser::is_modifier(std::string_view s) {
-    return s == "AUTO" || s == "COR" || s == "NIL" || s == "AMD";
-}
-
 void METARParser::parse_modifiers(TokenStream& ts) {
-    while (!ts.eof() && is_modifier(ts.peek())) {
+    while (!ts.eof()) {
+        std::string_view next = ts.peek();
+        if (next != "AUTO" && next != "COR" && next != "NIL" && next != "AMD") {
+            break;
+        }
         metar_.modifiers.push_back(ts.consume());
     }
 }
 
-bool METARParser::is_wind(std::string_view s) {
-    return std::regex_match(s.begin(), s.end(),
-                            RegexUtils::make_token_regex(Patterns::WIND));
-}
-
-bool METARParser::is_variable_wind(std::string_view s) {
-    return std::regex_match(
-        s.begin(), s.end(),
-        RegexUtils::make_token_regex(Patterns::VARIABILITY));
-}
-
 void METARParser::parse_wind(TokenStream& ts) {
-    if (ts.eof() || !is_wind(ts.peek())) {
+    if (ts.eof() ||
+        !std::regex_match(ts.peek().begin(), ts.peek().end(),
+                          RegexUtils::make_token_regex(Patterns::WIND))) {
         return;
     }
 
@@ -132,7 +113,9 @@ void METARParser::parse_wind(TokenStream& ts) {
         }
     }
 
-    if (!ts.eof() && is_variable_wind(ts.peek())) {
+    if (!ts.eof() &&
+        std::regex_match(ts.peek().begin(), ts.peek().end(),
+                         RegexUtils::make_token_regex(Patterns::VARIABILITY))) {
         const std::string var_token = ts.consume();
         if (std::regex_match(
                 var_token, match_results,
@@ -144,30 +127,7 @@ void METARParser::parse_wind(TokenStream& ts) {
     }
 }
 
-bool METARParser::is_sm_single_token(std::string_view s) {
-    return std::regex_match(
-               s.begin(), s.end(),
-               RegexUtils::make_token_regex(Patterns::VIS_WHOLE_SM)) ||
-           std::regex_match(
-               s.begin(), s.end(),
-               RegexUtils::make_token_regex(Patterns::VIS_FRACT_SM));
-}
 
-bool METARParser::is_integer_token(std::string_view s) {
-    return std::regex_match(s.begin(), s.end(),
-                            RegexUtils::make_token_regex(Patterns::INTEGER));
-}
-
-bool METARParser::is_fraction_sm_token(std::string_view s) {
-    return std::regex_match(
-        s.begin(), s.end(),
-        RegexUtils::make_token_regex(Patterns::VIS_FRACT_SM));
-}
-
-bool METARParser::is_metric_visibility(std::string_view s) {
-    return std::regex_match(s.begin(), s.end(),
-                            RegexUtils::make_token_regex(Patterns::VIS_METERS));
-}
 
 void METARParser::parse_visibility(TokenStream& ts) {
     if (ts.eof()) {
@@ -185,7 +145,8 @@ void METARParser::parse_visibility(TokenStream& ts) {
         return;
     }
 
-    if (is_metric_visibility(s)) {
+    if (std::regex_match(s.begin(), s.end(),
+                         RegexUtils::make_token_regex(Patterns::VIS_METERS))) {
         const std::string vis_token = ts.consume();
         std::smatch match_results;
         if (std::regex_match(
@@ -204,7 +165,10 @@ void METARParser::parse_visibility(TokenStream& ts) {
         return;
     }
 
-    if (is_sm_single_token(s)) {
+    if (std::regex_match(s.begin(), s.end(),
+                         RegexUtils::make_token_regex(Patterns::VIS_WHOLE_SM)) ||
+        std::regex_match(s.begin(), s.end(),
+                         RegexUtils::make_token_regex(Patterns::VIS_FRACT_SM))) {
         const std::string vis_token = ts.consume();
         std::smatch match_results;
         if (std::regex_match(
@@ -225,7 +189,10 @@ void METARParser::parse_visibility(TokenStream& ts) {
         return;
     }
 
-    if (is_integer_token(s) && is_fraction_sm_token(ts.peek(1))) {
+    if (std::regex_match(s.begin(), s.end(),
+                         RegexUtils::make_token_regex(Patterns::INTEGER)) &&
+        std::regex_match(ts.peek(1).begin(), ts.peek(1).end(),
+                         RegexUtils::make_token_regex(Patterns::VIS_FRACT_SM))) {
         const double whole = std::stod(std::string(ts.consume()));
         const std::string fraction_token = ts.consume();
         std::smatch match_results;
@@ -243,7 +210,8 @@ void METARParser::parse_visibility(TokenStream& ts) {
 }
 
 void METARParser::parse_rvr_block(TokenStream& ts) {
-    while (!ts.eof() && is_rvr(ts.peek())) {
+    while (!ts.eof() && std::regex_match(ts.peek().begin(), ts.peek().end(),
+                                          RegexUtils::make_token_regex(Patterns::RVR))) {
         if (!metar_.rvr.empty()) {
             metar_.rvr += " ";
         }
@@ -252,7 +220,8 @@ void METARParser::parse_rvr_block(TokenStream& ts) {
 }
 
 void METARParser::parse_weather_block(TokenStream& ts) {
-    while (!ts.eof() && is_weather(ts.peek())) {
+    while (!ts.eof() && std::regex_match(ts.peek().begin(), ts.peek().end(),
+                                          RegexUtils::make_token_regex(Patterns::WEATHER))) {
         if (!metar_.weather.empty()) {
             metar_.weather += " ";
         }
@@ -267,7 +236,8 @@ void METARParser::parse_sky_block(TokenStream& ts) {
     }
 
     bool ceiling_set = false;
-    while (!ts.eof() && is_sky(ts.peek())) {
+    while (!ts.eof() && std::regex_match(ts.peek().begin(), ts.peek().end(),
+                                          RegexUtils::make_token_regex(Patterns::SKY))) {
         const std::string sky_token = ts.consume();
         std::smatch match_results;
         if (!std::regex_match(sky_token, match_results,
@@ -310,7 +280,8 @@ void METARParser::parse_sky_block(TokenStream& ts) {
 }
 
 void METARParser::parse_temp_dwpt(TokenStream& ts) {
-    if (ts.eof() || !is_temp_dwpt(ts.peek())) {
+    if (ts.eof() || !std::regex_match(ts.peek().begin(), ts.peek().end(),
+                                       RegexUtils::make_token_regex(Patterns::TEMP_DWPT))) {
         return;
     }
 
@@ -333,7 +304,8 @@ void METARParser::parse_temp_dwpt(TokenStream& ts) {
 }
 
 void METARParser::parse_pressure(TokenStream& ts) {
-    if (ts.eof() || !is_pressure(ts.peek())) {
+    if (ts.eof() || !std::regex_match(ts.peek().begin(), ts.peek().end(),
+                                       RegexUtils::make_token_regex(Patterns::PRESSURE))) {
         return;
     }
 
@@ -355,52 +327,7 @@ void METARParser::parse_pressure(TokenStream& ts) {
     }
 }
 
-void METARParser::parse_remark(TokenStream& ts) {
-    if (ts.eof() || !is_remark(ts.peek())) {
-        return;
-    }
 
-    ts.consume();
-    std::ostringstream oss;
-    bool first = true;
-    while (!ts.eof()) {
-        if (!first) {
-            oss << " ";
-        }
-        oss << ts.consume();
-        first = false;
-    }
-    metar_.remarks = oss.str();
-}
-
-bool METARParser::is_rvr(std::string_view s) {
-    return std::regex_match(s.begin(), s.end(),
-                            RegexUtils::make_token_regex(Patterns::RVR));
-}
-
-bool METARParser::is_weather(std::string_view s) {
-    return std::regex_match(s.begin(), s.end(),
-                            RegexUtils::make_token_regex(Patterns::WEATHER));
-}
-
-bool METARParser::is_sky(std::string_view s) {
-    return std::regex_match(s.begin(), s.end(),
-                            RegexUtils::make_token_regex(Patterns::SKY));
-}
-
-bool METARParser::is_temp_dwpt(std::string_view s) {
-    return std::regex_match(s.begin(), s.end(),
-                            RegexUtils::make_token_regex(Patterns::TEMP_DWPT));
-}
-
-bool METARParser::is_pressure(std::string_view s) {
-    return std::regex_match(s.begin(), s.end(),
-                            RegexUtils::make_token_regex(Patterns::PRESSURE));
-}
-
-bool METARParser::is_remark(std::string_view s) {
-    return s == "RMK";
-}
 
 std::string METARParser::to_string() const {
     std::ostringstream oss;
