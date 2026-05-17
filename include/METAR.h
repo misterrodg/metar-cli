@@ -1,8 +1,9 @@
 #ifndef METAR_H
 #define METAR_H
 
+#include "Units.h"
+
 #include <optional>
-#include <ostream>
 #include <string>
 #include <vector>
 
@@ -14,7 +15,7 @@ struct CloudCoverage {
 
 struct Pressure {
     double pressure;
-    std::string unit;
+    PressureUnit unit;
 };
 
 struct ReportTime {
@@ -28,18 +29,12 @@ struct Variability {
     int to_value;
 };
 
-enum class VisibilityUnit { FEET, KILOMETERS, METERS, STATUTE_MILES, UNKNOWN };
-
 struct Visibility {
     std::optional<double> value;
     VisibilityUnit unit;
     bool less_than;
     bool greater_or_equal;
 };
-
-std::ostream& operator<<(std::ostream& os, VisibilityUnit unit);
-
-enum class WindUnit { KNOTS, KILOMETERS_PER_HOUR, METERS_PER_SECOND, UNKNOWN };
 
 struct Wind {
     int direction;
@@ -49,8 +44,6 @@ struct Wind {
     std::optional<int> gust;
     std::optional<Variability> variability;
 };
-
-std::ostream& operator<<(std::ostream& os, WindUnit unit);
 
 struct METAR {
     METAR();

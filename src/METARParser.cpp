@@ -347,9 +347,11 @@ void METARParser::parse_pressure(TokenStream& ts) {
     const std::string unit = match_results[1].str();
     const int value = std::stoi(match_results[2].str());
     if (unit == "A") {
-        metar_.pressure = Pressure{static_cast<double>(value) / 100.0, "inHg"};
+        metar_.pressure =
+            Pressure{static_cast<double>(value) / 100.0, PressureUnit::INHG};
     } else {
-        metar_.pressure = Pressure{static_cast<double>(value), "mb"};
+        metar_.pressure =
+            Pressure{static_cast<double>(value), PressureUnit::HPA};
     }
 }
 
