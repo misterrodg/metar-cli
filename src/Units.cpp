@@ -3,53 +3,38 @@
 std::ostream& operator<<(std::ostream& os, PressureUnit unit) {
     switch (unit) {
     case PressureUnit::HPA:
-        os << "hPa";
-        break;
+        return os << "hPa";
     case PressureUnit::INHG:
-        os << "inHg";
-        break;
+        return os << "inHg";
     default:
-        os << "unknown unit";
-        break;
+        return os << "unknown unit";
     }
-    return os;
 }
 
 std::ostream& operator<<(std::ostream& os, VisibilityUnit unit) {
     switch (unit) {
     case VisibilityUnit::FEET:
-        os << "feet";
-        break;
+        return os << "feet";
     case VisibilityUnit::KILOMETERS:
-        os << "kilometers";
-        break;
+        return os << "kilometers";
     case VisibilityUnit::METERS:
-        os << "meters";
-        break;
+        return os << "meters";
     case VisibilityUnit::STATUTE_MILES:
-        os << "statute miles";
-        break;
+        return os << "statute miles";
     default:
-        os << "unknown unit";
-        break;
+        return os << "unknown unit";
     }
-    return os;
 }
 
 std::ostream& operator<<(std::ostream& os, WindUnit unit) {
     switch (unit) {
     case WindUnit::KNOTS:
-        os << "knots";
-        break;
+        return os << "knots";
     case WindUnit::KILOMETERS_PER_HOUR:
-        os << "kilometers per hour";
-        break;
+        return os << "kilometers per hour";
     case WindUnit::METERS_PER_SECOND:
-        os << "meters per second";
-        break;
+        return os << "meters per second";
     default:
-        os << "unknown unit";
-        break;
+        return os << "unknown unit";
     }
-    return os;
 }
