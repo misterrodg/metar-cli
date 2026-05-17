@@ -10,6 +10,7 @@ include_directories(include)
 add_executable(metar
     src/main.cpp
     src/ArgParser.cpp
+    src/METAR.cpp
     src/METARParser.cpp
     src/Spinner.cpp
     src/TokenStream.cpp
