@@ -13,8 +13,10 @@ METARParser::METARParser(const std::string& metar)
     : metar_string_(metar), metar_() {
     TokenStream tokens{split_on_whitespace(metar)};
 
-    metar_.wind = Wind{0, 0, "", false, std::nullopt, std::nullopt};
-    metar_.visibility = Visibility{std::nullopt, "", false, false};
+    metar_.visibility =
+        Visibility{std::nullopt, VisibilityUnit::UNKNOWN, false, false};
+    metar_.wind =
+        Wind{0, 0, WindUnit::UNKNOWN, false, std::nullopt, std::nullopt};
 
     parse_type(tokens);
     parse_station_id(tokens);
@@ -118,7 +120,16 @@ void METARParser::parse_wind(TokenStream& ts) {
             metar_.wind->gust = std::stoi(match_results[4].str());
         }
 
-        metar_.wind->unit = match_results[5].str();
+        const std::string unit = match_results[5].str();
+        if (unit == "KT") {
+            metar_.wind->unit = WindUnit::KNOTS;
+        } else if (unit == "KMH") {
+            metar_.wind->unit = WindUnit::KILOMETERS_PER_HOUR;
+        } else if (unit == "MPS") {
+            metar_.wind->unit = WindUnit::METERS_PER_SECOND;
+        } else {
+            metar_.wind->unit = WindUnit::UNKNOWN;
+        }
     }
 
     if (!ts.eof() && is_variable_wind(ts.peek())) {
@@ -169,7 +180,7 @@ void METARParser::parse_visibility(TokenStream& ts) {
         ts.consume();
         metar_.is_cavok = true;
         metar_.visibility->value = 10.0;
-        metar_.visibility->unit = "statute miles";
+        metar_.visibility->unit = VisibilityUnit::STATUTE_MILES;
         metar_.visibility->greater_or_equal = true;
         return;
     }
@@ -183,11 +194,11 @@ void METARParser::parse_visibility(TokenStream& ts) {
             int meters = std::stoi(match_results[1].str());
             if (meters == 9999) {
                 metar_.visibility->value = 10.0;
-                metar_.visibility->unit = "km";
+                metar_.visibility->unit = VisibilityUnit::KILOMETERS;
                 metar_.visibility->greater_or_equal = true;
             } else {
                 metar_.visibility->value = meters;
-                metar_.visibility->unit = "m";
+                metar_.visibility->unit = VisibilityUnit::METERS;
             }
         }
         return;
@@ -200,7 +211,7 @@ void METARParser::parse_visibility(TokenStream& ts) {
                 vis_token, match_results,
                 RegexUtils::make_token_regex(Patterns::VIS_WHOLE_SM))) {
             metar_.visibility->value = std::stod(match_results[1].str());
-            metar_.visibility->unit = "statute miles";
+            metar_.visibility->unit = VisibilityUnit::STATUTE_MILES;
         } else if (std::regex_match(
                        vis_token, match_results,
                        RegexUtils::make_token_regex(Patterns::VIS_FRACT_SM))) {
@@ -209,7 +220,7 @@ void METARParser::parse_visibility(TokenStream& ts) {
             const double denominator = std::stod(match_results[3].str());
             metar_.visibility->value = numerator / denominator;
             metar_.visibility->less_than = less_than;
-            metar_.visibility->unit = "statute miles";
+            metar_.visibility->unit = VisibilityUnit::STATUTE_MILES;
         }
         return;
     }
@@ -226,7 +237,7 @@ void METARParser::parse_visibility(TokenStream& ts) {
             const double denominator = std::stod(match_results[3].str());
             metar_.visibility->value = whole + (numerator / denominator);
             metar_.visibility->less_than = less_than;
-            metar_.visibility->unit = "statute miles";
+            metar_.visibility->unit = VisibilityUnit::STATUTE_MILES;
         }
     }
 }

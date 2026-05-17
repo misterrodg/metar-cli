@@ -2,6 +2,7 @@
 #define METAR_H
 
 #include <optional>
+#include <ostream>
 #include <string>
 #include <vector>
 
@@ -27,21 +28,29 @@ struct Variability {
     int to_value;
 };
 
+enum class VisibilityUnit { FEET, KILOMETERS, METERS, STATUTE_MILES, UNKNOWN };
+
 struct Visibility {
     std::optional<double> value;
-    std::string unit;
+    VisibilityUnit unit;
     bool less_than;
     bool greater_or_equal;
 };
 
+std::ostream& operator<<(std::ostream& os, VisibilityUnit unit);
+
+enum class WindUnit { KNOTS, KILOMETERS_PER_HOUR, METERS_PER_SECOND, UNKNOWN };
+
 struct Wind {
     int direction;
     int speed;
-    std::string unit;
+    WindUnit unit;
     bool is_variable;
     std::optional<int> gust;
     std::optional<Variability> variability;
 };
+
+std::ostream& operator<<(std::ostream& os, WindUnit unit);
 
 struct METAR {
     METAR();
