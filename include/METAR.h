@@ -44,6 +44,7 @@ struct Wind {
 };
 
 struct METAR {
+    METAR();
     std::string type;
     std::string station_id;
     std::optional<ReportTime> report_time;
