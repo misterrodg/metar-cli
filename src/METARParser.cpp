@@ -183,13 +183,12 @@ void METARParser::parse_visibility(TokenStream& ts) {
             int meters = std::stoi(match_results[1].str());
             if (meters == 9999) {
                 metar_.visibility->value = 10.0;
+                metar_.visibility->unit = "km";
                 metar_.visibility->greater_or_equal = true;
             } else {
-                double m_to_sm = 1609.344;
-                metar_.visibility->value =
-                    static_cast<double>(meters) / m_to_sm;
+                metar_.visibility->value = meters;
+                metar_.visibility->unit = "m";
             }
-            metar_.visibility->unit = "statute miles";
         }
         return;
     }
