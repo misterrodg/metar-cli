@@ -28,7 +28,7 @@ struct Variability {
 };
 
 struct Visibility {
-    double value;
+    std::optional<double> value;
     std::string unit;
     bool less_than;
     bool greater_or_equal;

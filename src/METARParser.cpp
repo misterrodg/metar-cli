@@ -14,7 +14,7 @@ METARParser::METARParser(const std::string& metar)
     TokenStream tokens{split_on_whitespace(metar)};
 
     metar_.wind = Wind{0, 0, "", false, std::nullopt, std::nullopt};
-    metar_.visibility = Visibility{0.0, "", false, false};
+    metar_.visibility = Visibility{std::nullopt, "", false, false};
 
     parse_type(tokens);
     parse_station_id(tokens);
@@ -435,7 +435,8 @@ std::string METARParser::to_string() const {
     }
 
     oss << "\tVisibility ";
-    if (!metar_.visibility.has_value()) {
+    if (!metar_.visibility.has_value() ||
+        !metar_.visibility->value.has_value()) {
         oss << "not reported\n";
     } else {
         if (metar_.visibility->less_than) {
@@ -443,8 +444,8 @@ std::string METARParser::to_string() const {
         } else if (metar_.visibility->greater_or_equal) {
             oss << "at least ";
         }
-        oss << metar_.visibility->value << " " << metar_.visibility->unit
-            << "\n";
+        oss << metar_.visibility->value.value() << " "
+            << metar_.visibility->unit << "\n";
     }
 
     if (metar_.is_clr) {
