@@ -414,14 +414,14 @@ std::string METARParser::to_string() const {
             if (metar_.wind->gust.has_value()) {
                 oss << " gusting " << metar_.wind->gust.value();
             }
-            oss << " knots\n";
+            oss << " " << metar_.wind->unit << "\n";
         } else {
             oss << "from " << metar_.wind->direction << " at "
                 << metar_.wind->speed;
             if (metar_.wind->gust.has_value()) {
                 oss << " gusting " << metar_.wind->gust.value();
             }
-            oss << " knots\n";
+            oss << " " << metar_.wind->unit << "\n";
 
             if (metar_.wind->variability.has_value()) {
                 oss << "\tVariable from "
