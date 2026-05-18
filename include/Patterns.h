@@ -76,10 +76,10 @@ inline constexpr std::string_view RVR =
 // Weather
 // 1 = intensity/proximity (VC / - / +), optional
 // 2 = descriptor, optional
-// 3 = full concatenated phenomena sequence
+// 3 = full concatenated phenomena sequence, optional for vicinity forms
 // 4 = last individual phenomenon matched
 inline constexpr std::string_view WEATHER =
-    R"((VC|\-|\+)?(MI|PR|BC|DR|BL|SH|TS|FZ)?((DZ|RA|SN|SG|IC|PL|GR|GS|UP|BR|FG|FU|VA|DU|SA|HZ|PY|PO|SQ|FC|SS|DS)+))";
+    R"((VC|\-|\+)?(MI|PR|BC|DR|BL|SH|TS|FZ)?((DZ|RA|SN|SG|IC|PL|GR|GS|UP|BR|FG|FU|VA|DU|SA|HZ|PY|PO|SQ|FC|SS|DS)+)?)";
 
 // 1 = amount/token
 // 2 = height, optional

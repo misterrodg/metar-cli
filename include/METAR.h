@@ -36,6 +36,72 @@ struct Visibility {
     bool greater_or_equal;
 };
 
+enum class Intensity { LIGHT, HEAVY, VICINITY, UNKNOWN };
+
+std::ostream& operator<<(std::ostream& os, Intensity intensity);
+
+enum class Descriptor {
+    SHALLOW,
+    PARTIAL,
+    PATCHES,
+    LOW_DRIFTING,
+    BLOWING,
+    SHOWERS,
+    THUNDERSTORM,
+    FREEZING,
+    UNKNOWN
+};
+
+std::ostream& operator<<(std::ostream& os, Descriptor descriptor);
+
+enum class Precipitation {
+    DRIZZLE,
+    RAIN,
+    SNOW,
+    SNOW_GRAINS,
+    ICE_CRYSTALS,
+    ICE_PELLETS,
+    HAIL,
+    SMALL_HAIL,
+    UNKNOWN_PRECIP,
+    UNKNOWN
+};
+
+std::ostream& operator<<(std::ostream& os, Precipitation precipitation);
+
+enum class Obscuration {
+    MIST,
+    FOG,
+    SMOKE,
+    VOLCANIC_ASH,
+    WIDESPREAD_DUST,
+    SAND,
+    HAZE,
+    SPRAY,
+    UNKNOWN
+};
+
+std::ostream& operator<<(std::ostream& os, Obscuration obscuration);
+
+enum class OtherPhenomenon {
+    DUST_WHIRLS,
+    SQUALLS,
+    FUNNEL_CLOUD,
+    SANDSTORM,
+    DUSTSTORM,
+    UNKNOWN
+};
+
+std::ostream& operator<<(std::ostream& os, OtherPhenomenon phenomenon);
+
+struct Weather {
+    std::optional<Intensity> intensity;
+    std::optional<Descriptor> descriptor;
+    std::optional<Precipitation> precipitation;
+    std::optional<Obscuration> obscuration;
+    std::optional<OtherPhenomenon> other_phenomenon;
+};
+
 struct Wind {
     int direction;
     int speed;
@@ -55,7 +121,7 @@ struct METAR {
     bool is_cavok;
     std::optional<Visibility> visibility;
     std::string rvr;
-    std::string weather;
+    std::vector<Weather> weather;
     bool is_clr;
     bool is_skc;
     bool is_nsc;

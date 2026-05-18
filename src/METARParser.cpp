@@ -224,16 +224,109 @@ void METARParser::parse_rvr_block(TokenStream& ts) {
 void METARParser::parse_weather_block(TokenStream& ts) {
     while (!ts.eof()) {
         const std::string_view next = ts.peek();
+
         if (!std::regex_match(
                 next.begin(), next.end(),
                 RegexUtils::make_exact_regex(Patterns::WEATHER))) {
             break;
         }
 
-        if (!metar_.weather.empty()) {
-            metar_.weather += " ";
+        const std::string weather_token = ts.consume();
+        std::smatch match_results;
+        if (!std::regex_match(
+                weather_token, match_results,
+                RegexUtils::make_exact_regex(Patterns::WEATHER))) {
+            continue;
         }
-        metar_.weather += ts.consume();
+
+        std::optional<Intensity> intensity = std::nullopt;
+        const std::string intensity_str = match_results[1].str();
+        if (intensity_str == "-") {
+            intensity = Intensity::LIGHT;
+        } else if (intensity_str == "+") {
+            intensity = Intensity::HEAVY;
+        } else if (intensity_str == "VC") {
+            intensity = Intensity::VICINITY;
+        }
+
+        std::optional<Descriptor> descriptor = std::nullopt;
+        const std::string descriptor_str = match_results[2].str();
+        if (descriptor_str == "MI") {
+            descriptor = Descriptor::SHALLOW;
+        } else if (descriptor_str == "PR") {
+            descriptor = Descriptor::PARTIAL;
+        } else if (descriptor_str == "BC") {
+            descriptor = Descriptor::PATCHES;
+        } else if (descriptor_str == "DR") {
+            descriptor = Descriptor::LOW_DRIFTING;
+        } else if (descriptor_str == "BL") {
+            descriptor = Descriptor::BLOWING;
+        } else if (descriptor_str == "SH") {
+            descriptor = Descriptor::SHOWERS;
+        } else if (descriptor_str == "TS") {
+            descriptor = Descriptor::THUNDERSTORM;
+        } else if (descriptor_str == "FZ") {
+            descriptor = Descriptor::FREEZING;
+        }
+
+        std::optional<Precipitation> precipitation = std::nullopt;
+        const std::string precip_str = match_results[3].str();
+        if (precip_str == "DZ") {
+            precipitation = Precipitation::DRIZZLE;
+        } else if (precip_str == "RA") {
+            precipitation = Precipitation::RAIN;
+        } else if (precip_str == "SN") {
+            precipitation = Precipitation::SNOW;
+        } else if (precip_str == "SG") {
+            precipitation = Precipitation::SNOW_GRAINS;
+        } else if (precip_str == "IC") {
+            precipitation = Precipitation::ICE_CRYSTALS;
+        } else if (precip_str == "PL") {
+            precipitation = Precipitation::ICE_PELLETS;
+        } else if (precip_str == "GR") {
+            precipitation = Precipitation::HAIL;
+        } else if (precip_str == "GS") {
+            precipitation = Precipitation::SMALL_HAIL;
+        } else if (precip_str == "UP") {
+            precipitation = Precipitation::UNKNOWN_PRECIP;
+        }
+
+        std::optional<Obscuration> obscuration = std::nullopt;
+        const std::string obscuration_str = match_results[3].str();
+        if (obscuration_str == "BR") {
+            obscuration = Obscuration::MIST;
+        } else if (obscuration_str == "FG") {
+            obscuration = Obscuration::FOG;
+        } else if (obscuration_str == "FU") {
+            obscuration = Obscuration::SMOKE;
+        } else if (obscuration_str == "VA") {
+            obscuration = Obscuration::VOLCANIC_ASH;
+        } else if (obscuration_str == "DU") {
+            obscuration = Obscuration::WIDESPREAD_DUST;
+        } else if (obscuration_str == "SA") {
+            obscuration = Obscuration::SAND;
+        } else if (obscuration_str == "HZ") {
+            obscuration = Obscuration::HAZE;
+        } else if (obscuration_str == "PY") {
+            obscuration = Obscuration::SPRAY;
+        }
+
+        std::optional<OtherPhenomenon> other_phenomenon = std::nullopt;
+        const std::string other_phenomenon_str = match_results[3].str();
+        if (other_phenomenon_str == "PO") {
+            other_phenomenon = OtherPhenomenon::DUST_WHIRLS;
+        } else if (other_phenomenon_str == "SQ") {
+            other_phenomenon = OtherPhenomenon::SQUALLS;
+        } else if (other_phenomenon_str == "FC") {
+            other_phenomenon = OtherPhenomenon::FUNNEL_CLOUD;
+        } else if (other_phenomenon_str == "SS") {
+            other_phenomenon = OtherPhenomenon::SANDSTORM;
+        } else if (other_phenomenon_str == "DS") {
+            other_phenomenon = OtherPhenomenon::DUSTSTORM;
+        }
+
+        metar_.weather.push_back(Weather{intensity, descriptor, precipitation,
+                                         obscuration, other_phenomenon});
     }
 }
 
@@ -396,6 +489,29 @@ std::string METARParser::to_string() const {
         }
         oss << metar_.visibility->value.value() << " "
             << metar_.visibility->unit << "\n";
+    }
+
+    if (!metar_.weather.empty()) {
+        oss << "\tWeather:\n";
+        for (const Weather& weather : metar_.weather) {
+            oss << "\t\t";
+            if (weather.intensity.has_value()) {
+                oss << weather.intensity.value() << " ";
+            }
+            if (weather.descriptor.has_value()) {
+                oss << weather.descriptor.value() << " ";
+            }
+            if (weather.precipitation.has_value()) {
+                oss << weather.precipitation.value() << " ";
+            }
+            if (weather.obscuration.has_value()) {
+                oss << weather.obscuration.value() << " ";
+            }
+            if (weather.other_phenomenon.has_value()) {
+                oss << weather.other_phenomenon.value() << " ";
+            }
+            oss << "\n";
+        }
     }
 
     if (metar_.is_clr) {
