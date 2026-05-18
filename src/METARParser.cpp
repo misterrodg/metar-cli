@@ -222,8 +222,14 @@ void METARParser::parse_rvr_block(TokenStream& ts) {
 }
 
 void METARParser::parse_weather_block(TokenStream& ts) {
-    while (!ts.eof() && std::regex_match(ts.peek().begin(), ts.peek().end(),
-                                          RegexUtils::make_token_regex(Patterns::WEATHER))) {
+    while (!ts.eof()) {
+        const std::string_view next = ts.peek();
+        if (!std::regex_match(
+                next.begin(), next.end(),
+                RegexUtils::make_exact_regex(Patterns::WEATHER))) {
+            break;
+        }
+
         if (!metar_.weather.empty()) {
             metar_.weather += " ";
         }
