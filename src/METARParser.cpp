@@ -436,7 +436,7 @@ void METARParser::parse_pressure(TokenStream& ts) {
 std::string METARParser::to_string() const {
     std::ostringstream oss;
 
-    oss << "Report for " << metar_.station_id << ":\n";
+    oss << metar_.type << " Report for " << metar_.station_id << ":\n";
 
     if (metar_.report_time.has_value()) {
         oss << "\tAt " << std::setfill('0') << std::setw(2)
