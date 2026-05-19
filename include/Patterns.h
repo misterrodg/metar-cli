@@ -62,16 +62,14 @@ inline constexpr std::string_view CLOUD_COVER =
 // 1 = whole token
 // 2 = runway number
 // 3 = runway side (L/C/R), optional
-// 4 = main prefix (M/P), optional
-// 5 = main distance
-// 6 = whole variable part (e.g. V1200), optional
-// 7 = variable prefix (M/P), optional
-// 8 = variable distance, optional
-// 9 = FT, optional
-// 10 = tendency (U/D/N), optional
+// 4 = constant prefix (M/P), optional
+// 5 = constant distance, optional
+// 6 = variable minimum distance, optional
+// 7 = variable maximum distance, optional
+// 8 = units (FT), optional
+// 9 = tendency (U/D/N), optional (optionally preceded by /)
 inline constexpr std::string_view RVR =
-    R"((R(\d{2})([LCR])?/([MP])?(\d{4})(V([MP])?(\d{4}))?(FT)?([UDN])?))";
-;
+    R"((R(\d{2})([LCR])?/(?:([MP])?(\d{4})|(\d{4})V(\d{4}))(FT)?(?:/)?([UDN])?))";
 
 // Weather
 // 1 = intensity/proximity (VC / - / +), optional

@@ -211,13 +211,68 @@ void METARParser::parse_visibility(TokenStream& ts) {
 }
 
 void METARParser::parse_rvr_block(TokenStream& ts) {
-    while (!ts.eof() &&
-           std::regex_match(ts.peek().begin(), ts.peek().end(),
-                            RegexUtils::make_token_regex(Patterns::RVR))) {
-        if (!metar_.rvr.empty()) {
-            metar_.rvr += " ";
+    while (!ts.eof()) {
+        const std::string_view next = ts.peek();
+
+        if (!std::regex_match(next.begin(), next.end(),
+                              RegexUtils::make_token_regex(Patterns::RVR))) {
+            break;
         }
-        metar_.rvr += ts.consume();
+
+        const std::string rvr_token = ts.consume();
+        std::smatch match_results;
+        if (!std::regex_match(rvr_token, match_results,
+                              RegexUtils::make_token_regex(Patterns::RVR))) {
+            continue;
+        }
+
+        std::string runway = match_results[2].str();
+        std::string side = match_results[3].str();
+        if (!side.empty()) {
+            runway += side;
+        }
+
+        std::optional<BoundaryStatus> boundary_status = std::nullopt;
+        std::string boundary_status_str = match_results[4].str();
+        if (boundary_status_str == "P") {
+            boundary_status = BoundaryStatus::PLUS;
+        } else if (boundary_status_str == "M") {
+            boundary_status = BoundaryStatus::MINUS;
+        }
+
+        std::optional<int> constant_distance = std::nullopt;
+        if (match_results[5].matched) {
+            constant_distance = std::stoi(match_results[5].str());
+        }
+
+        std::optional<int> variable_min_distance = std::nullopt;
+        std::optional<int> variable_max_distance = std::nullopt;
+        if (match_results[6].matched && match_results[7].matched) {
+            variable_min_distance = std::stoi(match_results[6].str());
+            variable_max_distance = std::stoi(match_results[7].str());
+        }
+
+        // ICAO METAR RVR defaults to meters when no explicit unit suffix is
+        // present.
+        std::optional<VisibilityUnit> unit = VisibilityUnit::METERS;
+        std::string unit_str = match_results[8].str();
+        if (unit_str == "FT") {
+            unit = VisibilityUnit::FEET;
+        }
+
+        std::optional<VisibilityTendency> tendency = std::nullopt;
+        std::string tendency_str = match_results[9].str();
+        if (tendency_str == "U") {
+            tendency = VisibilityTendency::INCREASING;
+        } else if (tendency_str == "D") {
+            tendency = VisibilityTendency::DECREASING;
+        } else if (tendency_str == "N") {
+            tendency = VisibilityTendency::STEADY;
+        }
+
+        metar_.rvr.push_back(RVR{runway, boundary_status, constant_distance,
+                                 variable_min_distance, variable_max_distance,
+                                 unit, tendency});
     }
 }
 
@@ -489,6 +544,35 @@ std::string METARParser::to_string() const {
         }
         oss << metar_.visibility->value.value() << " "
             << metar_.visibility->unit << "\n";
+    }
+
+    if (!metar_.rvr.empty()) {
+        oss << "\tRunway Visual Range:\n";
+        for (const RVR& rvr : metar_.rvr) {
+            oss << "\t\tRunway " << rvr.runway << ": ";
+            if (rvr.boundary_status.has_value()) {
+                oss << rvr.boundary_status.value() << " ";
+            }
+            if (rvr.constant_distance.has_value()) {
+                oss << rvr.constant_distance.value();
+                if (rvr.unit.has_value()) {
+                    oss << " " << rvr.unit.value();
+                }
+            } else if (rvr.variable_min_distance.has_value() &&
+                       rvr.variable_max_distance.has_value()) {
+                oss << "Variable from " << rvr.variable_min_distance.value()
+                    << " to " << rvr.variable_max_distance.value();
+                if (rvr.unit.has_value()) {
+                    oss << " " << rvr.unit.value();
+                }
+            } else {
+                oss << "Distance not reported\n";
+            }
+            if (rvr.tendency.has_value()) {
+                oss << ", " << rvr.tendency.value();
+            }
+            oss << "\n";
+        }
     }
 
     if (!metar_.weather.empty()) {

@@ -111,6 +111,24 @@ struct Wind {
     std::optional<Variability> variability;
 };
 
+enum class BoundaryStatus { PLUS, MINUS, UNKNOWN };
+
+std::ostream& operator<<(std::ostream& os, BoundaryStatus status);
+
+enum class VisibilityTendency { INCREASING, STEADY, DECREASING, UNKNOWN };
+
+std::ostream& operator<<(std::ostream& os, VisibilityTendency tendency);
+
+struct RVR {
+    std::string runway;
+    std::optional<BoundaryStatus> boundary_status;
+    std::optional<int> constant_distance;
+    std::optional<int> variable_min_distance;
+    std::optional<int> variable_max_distance;
+    std::optional<VisibilityUnit> unit;
+    std::optional<VisibilityTendency> tendency;
+};
+
 struct METAR {
     METAR();
     std::string type;
@@ -120,7 +138,7 @@ struct METAR {
     std::optional<Wind> wind;
     bool is_cavok;
     std::optional<Visibility> visibility;
-    std::string rvr;
+    std::vector<RVR> rvr;
     std::vector<Weather> weather;
     bool is_clr;
     bool is_skc;
