@@ -12,6 +12,7 @@ add_executable(metar
     src/ArgParser.cpp
     src/METAR.cpp
     src/METARParser.cpp
+    src/Ordinals.cpp
     src/Spinner.cpp
     src/TokenStream.cpp
     src/Units.cpp
