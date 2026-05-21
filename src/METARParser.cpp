@@ -621,8 +621,14 @@ std::string METARParser::to_string() const {
              --i) {
             const CloudCoverage& layer = metar_.cloud_coverage[i];
 
-            oss << "\t\t" << layer.coverage << " at " << layer.altitude
-                << " AGL";
+            std::string preposition = " at ";
+            std::string unit = " AGL";
+            if (layer.coverage == "VV") {
+                preposition = " ";
+                unit = " feet";
+            }
+            oss << "\t\t" << layer.coverage << preposition << layer.altitude
+                << unit;
             if (layer.is_ceiling) {
                 oss << " --ceiling--";
             }
