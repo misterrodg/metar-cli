@@ -22,7 +22,7 @@ METARParser::METARParser(const std::string& metar)
     parse_type(tokens);
     parse_station_id(tokens);
     parse_report_time(tokens);
-    parse_modifiers(tokens);
+    parse_report_modifier(tokens);
     parse_wind(tokens);
     parse_visibility(tokens);
     parse_rvr_block(tokens);
@@ -68,13 +68,18 @@ void METARParser::parse_report_time(TokenStream& ts) {
     }
 }
 
-void METARParser::parse_modifiers(TokenStream& ts) {
-    while (!ts.eof()) {
-        std::string_view next = ts.peek();
-        if (next != "AUTO" && next != "COR" && next != "NIL" && next != "AMD") {
-            break;
-        }
-        metar_.modifiers.push_back(ts.consume());
+void METARParser::parse_report_modifier(TokenStream& ts) {
+    if (ts.eof() || !std::regex_match(ts.peek().begin(), ts.peek().end(),
+                                      RegexUtils::make_exact_regex(
+                                          Patterns::REPORT_MODIFIER))) {
+        return;
+    }
+
+    const std::string modifier_token = ts.consume();
+    if (modifier_token == "AUTO") {
+        metar_.report_modifier = ReportModifier::AUTO;
+    } else if (modifier_token == "COR") {
+        metar_.report_modifier = ReportModifier::COR;
     }
 }
 
@@ -502,6 +507,10 @@ std::string METARParser::to_string() const {
             << metar_.report_time->minute << "Z\n";
     } else {
         oss << "\tAt unknown time\n";
+    }
+
+    if (metar_.report_modifier.has_value()) {
+        oss << "\t" << metar_.report_modifier.value() << "\n";
     }
 
     oss << "\tWind ";

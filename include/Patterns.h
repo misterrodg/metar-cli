@@ -13,6 +13,10 @@ inline constexpr std::string_view STATION = R"(([A-Z0-9]{4}))";
 // 1 = day, 2 = hour, 3 = minute
 inline constexpr std::string_view TIMESTAMP = R"((\d{2})(\d{2})(\d{2})Z)";
 
+// Report Modifier
+// 1 = modifier token
+inline constexpr std::string_view REPORT_MODIFIER = R"((AUTO|COR))";
+
 // Wind
 // 1 = direction
 // 2 = speed

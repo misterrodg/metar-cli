@@ -129,12 +129,16 @@ struct RVR {
     std::optional<VisibilityTendency> tendency;
 };
 
+enum class ReportModifier { AUTO, COR, UNKNOWN };
+
+std::ostream& operator<<(std::ostream& os, ReportModifier modifier);
+
 struct METAR {
     METAR();
     std::string type;
     std::string station_id;
     std::optional<ReportTime> report_time;
-    std::vector<std::string> modifiers;
+    std::optional<ReportModifier> report_modifier;
     std::optional<Wind> wind;
     bool is_cavok;
     std::optional<Visibility> visibility;

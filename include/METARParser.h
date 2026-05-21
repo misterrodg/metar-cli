@@ -20,7 +20,7 @@ private:
     void parse_type(TokenStream& ts);
     void parse_station_id(TokenStream& ts);
     void parse_report_time(TokenStream& ts);
-    void parse_modifiers(TokenStream& ts);
+    void parse_report_modifier(TokenStream& ts);
     void parse_wind(TokenStream& ts);
     void parse_visibility(TokenStream& ts);
     void parse_rvr_block(TokenStream& ts);
