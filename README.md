@@ -6,11 +6,12 @@ To install or uninstall, see Installation below.
 ## Use
 
 ```bash
-metar <airport_id> [airport_id...] [-t | --translate]
+metar <airport_id> [airport_id...] [-t | --translate] [-m="METAR STRING" | --metar="METAR STRING"]
 ```
 
 The command `metar`, followed by at least one `airport_id` will result in a [basic](#basic) output.
 An optional `--translate` (or `-t`) flag for a more detailed [translated](#translated) output.
+An optional `--metar` (of `-m`) flag to manually parse a given METAR string.
 
 Inputs are not case sensitive: `METAR KIAD` or `metar kiad` are handled the same.
 
@@ -38,41 +39,56 @@ metar kfdk kdmw khgr --translate
 **Returns**
 
 ```
-METAR KFDK 092147Z 08007KT 10SM CLR 24/10 A3021
-METAR KDMW 092145Z AUTO 10007KT 10SM CLR 25/09 A3023 RMK AO2
-METAR KHGR 092053Z 11007G14KT 10SM CLR 25/06 A3022 RMK AO2 SLP240 T02500061 56017 $
+METAR KDMW 222015Z AUTO 13006KT 7SM RA BKN008 OVC019 14/14 A3030 RMK AO2 P0005
+METAR KHGR 221953Z 08005KT 6SM -RA BR OVC018 14/13 A3029 RMK AO2 SLP267 P0006 T01440133 $
+METAR KFDK 221947Z 10005KT 5SM -RA BR FEW012 BKN042 OVC048 14/14 A3032
 
-Report for KFDK:
-	At 2025-09-09 22:47Z
-	Wind from 80 at 7 knots
-	Visibility 10 SM
-	Clear below 12,000 AGL
-	Temperature 24C
-	Dewpoint 10C
-	Pressure 30.21 inHg
+METAR Report for KDMW:
+	On the 22nd at 20:15Z
+	Automated
+	Wind from 130 at 6 knots
+	Visibility 7 statute miles
+	Weather:
+		Rain
+	Cloud cover:
+		OVC at 1900 AGL
+		BKN at 800 AGL --ceiling--
+	Temperature 14C
+	Dewpoint 14C
+	Pressure 30.30 inHg
 
-Report for KDMW:
-	At 2025-09-09 22:45Z
-	Wind from 100 at 7 knots
-	Visibility 10 SM
-	Clear below 12,000 AGL
-	Temperature 25C
-	Dewpoint 9C
-	Pressure 30.23 inHg
+METAR Report for KHGR:
+	On the 22nd at 19:53Z
+	Wind from 80 at 5 knots
+	Visibility 6 statute miles
+	Weather:
+		Light Rain
+		Mist
+	Cloud cover:
+		OVC at 1800 AGL --ceiling--
+	Temperature 14C
+	Dewpoint 13C
+	Pressure 30.29 inHg
 
-Report for KHGR:
-	At 2025-09-09 21:53Z
-	Wind from 110 at 7 gusting 14 knots
-	Visibility 10 SM
-	Clear below 12,000 AGL
-	Temperature 25C
-	Dewpoint 6C
-	Pressure 30.22 inHg
+METAR Report for KFDK:
+	On the 22nd at 19:47Z
+	Wind from 100 at 5 knots
+	Visibility 5 statute miles
+	Weather:
+		Light Rain
+		Mist
+	Cloud cover:
+		OVC at 4800 AGL
+		BKN at 4200 AGL --ceiling--
+		FEW at 1200 AGL
+	Temperature 14C
+	Dewpoint 14C
+	Pressure 30.32 inHg
 ```
 
 ## Installation
 
-Installation can be by [Download](#download), or by 
+Installation can be by [Download](#download), or by
 [Building From Source](#building-from-source).
 
 ### Download
@@ -100,7 +116,7 @@ Install
 
 1. Rename the executable to `metar`.
 2. Place it in the location of your choice.
-2. [Add it to your PATH](https://stackoverflow.com/questions/4822400/register-an-exe-so-you-can-run-it-from-any-command-line-in-windows).
+3. [Add it to your PATH](https://stackoverflow.com/questions/4822400/register-an-exe-so-you-can-run-it-from-any-command-line-in-windows).
 
 Uninstall
 
@@ -117,4 +133,3 @@ Requirements:
 - `curl`
 
 To build, run `./build.sh`.
-
