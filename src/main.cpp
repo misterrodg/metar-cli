@@ -42,6 +42,13 @@ int main(int argc, char* argv[]) {
         spinner.start();
         metar_string = fetch_metar(airport_string);
         spinner.stop();
+
+        if (metar_string.empty()) {
+            fprintf(stderr,
+                    "Error: failed to fetch METAR data for %s.\n",
+                    airport_string.c_str());
+            return 1;
+        }
     }
 
     printf("%s\n", metar_string.c_str());
