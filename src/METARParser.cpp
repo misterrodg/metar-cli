@@ -658,8 +658,16 @@ std::string METARParser::to_string() const {
     }
 
     if (metar_.pressure.has_value()) {
-        oss << "\tPressure " << metar_.pressure->pressure << " "
-            << metar_.pressure->unit << "\n";
+        oss << "\tPressure ";
+        if (metar_.pressure->unit == PressureUnit::INHG) {
+            std::ostringstream pressure_stream;
+            pressure_stream << std::fixed << std::setprecision(2)
+                            << metar_.pressure->pressure;
+            oss << pressure_stream.str();
+        } else {
+            oss << metar_.pressure->pressure;
+        }
+        oss << " " << metar_.pressure->unit << "\n";
     } else {
         oss << "\tPressure not reported\n";
     }
