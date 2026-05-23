@@ -151,6 +151,11 @@ struct PeakWind {
     ReportTime time;
 };
 
+struct WindShift {
+    ReportTime time;
+    bool frontal_passage;
+};
+
 struct METAR {
     METAR();
     std::string type;
@@ -173,6 +178,7 @@ struct METAR {
     bool has_remarks;
     std::optional<StationType> station_type;
     std::optional<PeakWind> peak_wind;
+    std::optional<WindShift> wind_shift;
 };
 
 #endif

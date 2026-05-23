@@ -31,6 +31,7 @@ private:
     void parse_remark(TokenStream& ts);
     bool parse_station_type(TokenStream& ts);
     bool parse_peak_wind(TokenStream& ts);
+    bool parse_wind_shift(TokenStream& ts);
 };
 
 #endif

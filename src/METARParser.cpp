@@ -511,6 +511,9 @@ void METARParser::parse_remark(TokenStream& ts) {
         if (parse_peak_wind(ts)) {
             continue;
         }
+        if (parse_wind_shift(ts)) {
+            continue;
+        }
         ts.consume();
     }
 }
@@ -573,6 +576,41 @@ bool METARParser::parse_peak_wind(TokenStream& ts) {
     }
 
     metar_.peak_wind = PeakWind{direction, speed, time};
+    return true;
+}
+
+bool METARParser::parse_wind_shift(TokenStream& ts) {
+    if (ts.eof() || ts.peek() != "WSHFT") {
+        return false;
+    }
+
+    const std::string time_token = std::string(ts.peek(1));
+    if (time_token.empty()) {
+        return false;
+    }
+
+    std::smatch match_results;
+    if (!std::regex_match(time_token, match_results,
+                          RegexUtils::make_exact_regex(R"((\d{2})?(\d{2}))"))) {
+        return false;
+    }
+
+    ts.consume(); // WSHFT
+    ts.consume(); // time token
+
+    bool frontal_passage = false;
+    if (!ts.eof() && ts.peek() == "FROPA") {
+        ts.consume();
+        frontal_passage = true;
+    }
+
+    std::optional<int> hour = std::nullopt;
+    if (match_results[1].matched) {
+        hour = std::stoi(match_results[1].str());
+    }
+    const int minute = std::stoi(match_results[2].str());
+
+    metar_.wind_shift = WindShift{ReportTime{hour, minute}, frontal_passage};
     return true;
 }
 
@@ -762,6 +800,14 @@ std::string METARParser::to_string() const {
         oss << "\t\tPeak wind from " << metar_.peak_wind->direction << " at "
             << metar_.peak_wind->speed << " at " << metar_.peak_wind->time
             << "Z\n";
+    }
+
+    if (metar_.wind_shift.has_value()) {
+        oss << "\t\tWind shift at " << metar_.wind_shift->time;
+        if (metar_.wind_shift->frontal_passage) {
+            oss << " due to frontal passage";
+        }
+        oss << "\n";
     }
 
     return oss.str();
