@@ -620,7 +620,7 @@ std::string METARParser::to_string() const {
     oss << metar_.type << " Report for " << metar_.station_id << ":\n";
 
     if (metar_.report_date_time.has_value()) {
-        oss << "\t" << metar_.report_date_time.value() << "Z\n";
+        oss << "\t" << metar_.report_date_time.value() << "\n";
     } else {
         oss << "\tAt unknown time\n";
     }
@@ -799,7 +799,7 @@ std::string METARParser::to_string() const {
     if (metar_.peak_wind.has_value()) {
         oss << "\t\tPeak wind from " << metar_.peak_wind->direction << " at "
             << metar_.peak_wind->speed << " at " << metar_.peak_wind->time
-            << "Z\n";
+            << "\n";
     }
 
     if (metar_.wind_shift.has_value()) {

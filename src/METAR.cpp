@@ -164,7 +164,7 @@ std::ostream& operator<<(std::ostream& os, ReportTime report_time) {
                   << " minutes past the hour";
     }
     return os << std::setfill('0') << std::setw(2) << *report_time.hour << ":"
-              << std::setfill('0') << std::setw(2) << report_time.minute;
+              << std::setfill('0') << std::setw(2) << report_time.minute << "Z";
 }
 
 std::ostream& operator<<(std::ostream& os, ReportDateTime report_date_time) {
