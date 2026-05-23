@@ -10,8 +10,12 @@ namespace Patterns {
 inline constexpr std::string_view STATION = R"(([A-Z0-9]{4}))";
 
 // Timestamp
+// 1 = hour, 2 = minute
+inline constexpr std::string_view TIMESTAMP = R"((\d{2})(\d{2}))";
+
+// Date/Timestamp
 // 1 = day, 2 = hour, 3 = minute
-inline constexpr std::string_view TIMESTAMP = R"((\d{2})(\d{2})(\d{2})Z)";
+inline constexpr std::string_view DATETIMESTAMP = R"((\d{2})(\d{2})(\d{2})Z)";
 
 // Report Modifier
 // 1 = modifier token

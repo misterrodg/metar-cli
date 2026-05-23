@@ -50,16 +50,17 @@ void METARParser::parse_station_id(TokenStream& ts) {
 }
 
 void METARParser::parse_report_time(TokenStream& ts) {
-    if (ts.eof() ||
-        !std::regex_match(ts.peek().begin(), ts.peek().end(),
-                          RegexUtils::make_token_regex(Patterns::TIMESTAMP))) {
+    if (ts.eof() || !std::regex_match(ts.peek().begin(), ts.peek().end(),
+                                      RegexUtils::make_token_regex(
+                                          Patterns::DATETIMESTAMP))) {
         return;
     }
 
     const std::string time_token = ts.consume();
     std::smatch match_results;
-    if (std::regex_match(time_token, match_results,
-                         RegexUtils::make_token_regex(Patterns::TIMESTAMP))) {
+    if (std::regex_match(
+            time_token, match_results,
+            RegexUtils::make_token_regex(Patterns::DATETIMESTAMP))) {
         int day = std::stoi(match_results[1].str());
         int hour = std::stoi(match_results[2].str());
         int minute = std::stoi(match_results[3].str());
