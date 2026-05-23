@@ -28,6 +28,7 @@ private:
     void parse_sky_block(TokenStream& ts);
     void parse_temp_dwpt(TokenStream& ts);
     void parse_pressure(TokenStream& ts);
+    void parse_remark(TokenStream& ts);
 };
 
 #endif

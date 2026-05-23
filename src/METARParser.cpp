@@ -30,6 +30,7 @@ METARParser::METARParser(const std::string& metar)
     parse_sky_block(tokens);
     parse_temp_dwpt(tokens);
     parse_pressure(tokens);
+    parse_remark(tokens);
 }
 
 void METARParser::parse_type(TokenStream& ts) {
@@ -492,7 +493,20 @@ void METARParser::parse_pressure(TokenStream& ts) {
     }
 }
 
+void METARParser::parse_remark(TokenStream& ts) {
+    if (ts.eof() ||
+        !std::regex_match(ts.peek().begin(), ts.peek().end(),
+                          RegexUtils::make_token_regex(Patterns::REMARK))) {
+        return;
+    }
 
+    ts.consume();
+    metar_.has_remarks = true;
+
+    while (!ts.eof()) {
+        ts.consume();
+    }
+}
 
 std::string METARParser::to_string() const {
     std::ostringstream oss;
@@ -670,6 +684,10 @@ std::string METARParser::to_string() const {
         oss << " " << metar_.pressure->unit << "\n";
     } else {
         oss << "\tPressure not reported\n";
+    }
+
+    if (metar_.has_remarks) {
+        oss << "\n\tRemarks:\n";
     }
 
     return oss.str();

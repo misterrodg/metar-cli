@@ -5,7 +5,7 @@ METAR::METAR()
       report_modifier(std::nullopt), wind(std::nullopt), is_cavok(false),
       visibility(std::nullopt), rvr(), weather(), is_clr(false), is_skc(false),
       is_nsc(false), is_ncd(false), cloud_coverage(), temperature(std::nullopt),
-      dewpoint(std::nullopt), pressure(std::nullopt), remarks("") {
+      dewpoint(std::nullopt), pressure(std::nullopt), has_remarks(false) {
 }
 
 std::ostream& operator<<(std::ostream& os, Descriptor descriptor) {

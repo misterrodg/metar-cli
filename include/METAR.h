@@ -152,7 +152,7 @@ struct METAR {
     std::optional<int> temperature;
     std::optional<int> dewpoint;
     std::optional<Pressure> pressure;
-    std::string remarks;
+    bool has_remarks;
 };
 
 #endif
