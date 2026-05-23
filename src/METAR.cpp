@@ -5,7 +5,8 @@ METAR::METAR()
       report_modifier(std::nullopt), wind(std::nullopt), is_cavok(false),
       visibility(std::nullopt), rvr(), weather(), is_clr(false), is_skc(false),
       is_nsc(false), is_ncd(false), cloud_coverage(), temperature(std::nullopt),
-      dewpoint(std::nullopt), pressure(std::nullopt), has_remarks(false) {
+      dewpoint(std::nullopt), pressure(std::nullopt), has_remarks(false),
+      station_type(std::nullopt) {
 }
 
 std::ostream& operator<<(std::ostream& os, Descriptor descriptor) {
@@ -139,5 +140,16 @@ std::ostream& operator<<(std::ostream& os, OtherPhenomenon phenomenon) {
         return os << "Duststorm";
     default:
         return os << "unknown other phenomenon";
+    }
+}
+
+std::ostream& operator<<(std::ostream& os, StationType type) {
+    switch (type) {
+    case StationType::AO1:
+        return os << "Automated station";
+    case StationType::AO2:
+        return os << "Automated station with precipitation discriminator";
+    default:
+        return os << "unknown type";
     }
 }

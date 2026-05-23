@@ -29,6 +29,7 @@ private:
     void parse_temp_dwpt(TokenStream& ts);
     void parse_pressure(TokenStream& ts);
     void parse_remark(TokenStream& ts);
+    bool parse_station_type(TokenStream& ts);
 };
 
 #endif

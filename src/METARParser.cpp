@@ -504,8 +504,35 @@ void METARParser::parse_remark(TokenStream& ts) {
     metar_.has_remarks = true;
 
     while (!ts.eof()) {
+        if (parse_station_type(ts)) {
+            continue;
+        }
         ts.consume();
     }
+}
+
+bool METARParser::parse_station_type(TokenStream& ts) {
+    if (ts.eof() || !std::regex_match(
+                        ts.peek().begin(), ts.peek().end(),
+                        RegexUtils::make_token_regex(Patterns::STATION_TYPE))) {
+        return false;
+    }
+
+    const std::string station_type_token = ts.consume();
+    std::smatch match_results;
+    if (!std::regex_match(
+            station_type_token, match_results,
+            RegexUtils::make_token_regex(Patterns::STATION_TYPE))) {
+        return false;
+    }
+
+    const std::string type = match_results[0].str();
+    if (type == "AO1") {
+        metar_.station_type = StationType::AO1;
+    } else if (type == "AO2") {
+        metar_.station_type = StationType::AO2;
+    }
+    return true;
 }
 
 std::string METARParser::to_string() const {
@@ -688,6 +715,10 @@ std::string METARParser::to_string() const {
 
     if (metar_.has_remarks) {
         oss << "\n\tRemarks:\n";
+    }
+
+    if (metar_.station_type.has_value()) {
+        oss << "\t\t" << metar_.station_type.value() << "\n";
     }
 
     return oss.str();

@@ -108,6 +108,8 @@ inline constexpr std::string_view PRESSURE_MB = R"(Q(\d{4}))";
 
 inline constexpr std::string_view REMARK = R"(RMK)";
 
+inline constexpr std::string_view STATION_TYPE = R"(AO\d{1})";
+
 } // namespace Patterns
 
 #endif

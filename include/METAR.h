@@ -133,6 +133,10 @@ enum class ReportModifier { AUTO, COR, UNKNOWN };
 
 std::ostream& operator<<(std::ostream& os, ReportModifier modifier);
 
+enum class StationType { AO1, AO2, UNKNOWN };
+
+std::ostream& operator<<(std::ostream& os, StationType type);
+
 struct METAR {
     METAR();
     std::string type;
@@ -153,6 +157,7 @@ struct METAR {
     std::optional<int> dewpoint;
     std::optional<Pressure> pressure;
     bool has_remarks;
+    std::optional<StationType> station_type;
 };
 
 #endif
