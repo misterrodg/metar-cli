@@ -30,6 +30,7 @@ private:
     void parse_pressure(TokenStream& ts);
     void parse_remark(TokenStream& ts);
     bool parse_station_type(TokenStream& ts);
+    bool parse_peak_wind(TokenStream& ts);
 };
 
 #endif

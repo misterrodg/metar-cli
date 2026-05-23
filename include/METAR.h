@@ -145,6 +145,12 @@ enum class StationType { AO1, AO2, UNKNOWN };
 
 std::ostream& operator<<(std::ostream& os, StationType type);
 
+struct PeakWind {
+    int direction;
+    int speed;
+    ReportTime time;
+};
+
 struct METAR {
     METAR();
     std::string type;
@@ -166,6 +172,7 @@ struct METAR {
     std::optional<Pressure> pressure;
     bool has_remarks;
     std::optional<StationType> station_type;
+    std::optional<PeakWind> peak_wind;
 };
 
 #endif

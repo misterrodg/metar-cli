@@ -507,6 +507,9 @@ void METARParser::parse_remark(TokenStream& ts) {
         if (parse_station_type(ts)) {
             continue;
         }
+        if (parse_peak_wind(ts)) {
+            continue;
+        }
         ts.consume();
     }
 }
@@ -532,6 +535,43 @@ bool METARParser::parse_station_type(TokenStream& ts) {
     } else if (type == "AO2") {
         metar_.station_type = StationType::AO2;
     }
+    return true;
+}
+
+bool METARParser::parse_peak_wind(TokenStream& ts) {
+    if (ts.eof() || ts.peek() != "PK" || ts.peek(1) != "WND") {
+        return false;
+    }
+
+    const std::string peak_wind_token = std::string(ts.peek(2));
+    if (peak_wind_token.empty()) {
+        return false;
+    }
+
+    std::smatch match_results;
+    if (!std::regex_match(peak_wind_token, match_results,
+                          RegexUtils::make_exact_regex(
+                              R"((\d{3})(\d{2,3})/(\d{4}|\d{2}))"))) {
+        return false;
+    }
+
+    ts.consume(); // PK
+    ts.consume(); // WND
+    ts.consume(); // direction/speed/time token
+
+    const int direction = std::stoi(match_results[1].str());
+    const int speed = std::stoi(match_results[2].str());
+    const std::string time_token = match_results[3].str();
+
+    ReportTime time{std::nullopt, 0};
+    if (time_token.size() == 4) {
+        time.hour = std::stoi(time_token.substr(0, 2));
+        time.minute = std::stoi(time_token.substr(2, 2));
+    } else {
+        time.minute = std::stoi(time_token);
+    }
+
+    metar_.peak_wind = PeakWind{direction, speed, time};
     return true;
 }
 
@@ -715,6 +755,12 @@ std::string METARParser::to_string() const {
 
     if (metar_.station_type.has_value()) {
         oss << "\t\t" << metar_.station_type.value() << "\n";
+    }
+
+    if (metar_.peak_wind.has_value()) {
+        oss << "\t\tPeak wind from " << metar_.peak_wind->direction << " at "
+            << metar_.peak_wind->speed << " at " << metar_.peak_wind->time
+            << "Z\n";
     }
 
     return oss.str();

@@ -110,6 +110,9 @@ inline constexpr std::string_view REMARK = R"(RMK)";
 
 inline constexpr std::string_view STATION_TYPE = R"(AO\d{1})";
 
+inline constexpr std::string_view PEAK_WIND =
+    R"(PK WND (\d{3})(\d{2,3})/(\d{4}|\d{2}))";
+
 } // namespace Patterns
 
 #endif
