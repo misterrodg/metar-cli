@@ -1,5 +1,4 @@
 #include "METARParser.h"
-#include "Ordinals.h"
 #include "Patterns.h"
 #include "RegexUtils.h"
 #include "TokenStream.h"
@@ -65,7 +64,8 @@ void METARParser::parse_report_time(TokenStream& ts) {
         int hour = std::stoi(match_results[2].str());
         int minute = std::stoi(match_results[3].str());
 
-        metar_.report_time = ReportTime{day, hour, minute};
+        ReportTime report_time{hour, minute};
+        metar_.report_date_time = ReportDateTime{day, report_time};
     }
 }
 
@@ -540,12 +540,8 @@ std::string METARParser::to_string() const {
 
     oss << metar_.type << " Report for " << metar_.station_id << ":\n";
 
-    if (metar_.report_time.has_value()) {
-        oss << "\tOn the " << std::setfill('0') << std::setw(2)
-            << Ordinals::to_ordinal_date(metar_.report_time->day) << " at "
-            << std::setfill('0') << std::setw(2) << metar_.report_time->hour
-            << ":" << std::setfill('0') << std::setw(2)
-            << metar_.report_time->minute << "Z\n";
+    if (metar_.report_date_time.has_value()) {
+        oss << "\t" << metar_.report_date_time.value() << "Z\n";
     } else {
         oss << "\tAt unknown time\n";
     }

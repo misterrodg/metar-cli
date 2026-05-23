@@ -1,7 +1,10 @@
 #include "METAR.h"
+#include "Ordinals.h"
+
+#include <iomanip>
 
 METAR::METAR()
-    : type(""), station_id(""), report_time(std::nullopt),
+    : type(""), station_id(""), report_date_time(std::nullopt),
       report_modifier(std::nullopt), wind(std::nullopt), is_cavok(false),
       visibility(std::nullopt), rvr(), weather(), is_clr(false), is_skc(false),
       is_nsc(false), is_ncd(false), cloud_coverage(), temperature(std::nullopt),
@@ -152,4 +155,22 @@ std::ostream& operator<<(std::ostream& os, StationType type) {
     default:
         return os << "unknown type";
     }
+}
+
+std::ostream& operator<<(std::ostream& os, ReportTime report_time) {
+    if (report_time.hour == std::nullopt) {
+        return os << std::setfill('0') << std::setw(2) << report_time.minute
+                  << " minutes past the hour";
+    }
+    return os << std::setfill('0') << std::setw(2) << *report_time.hour << ":"
+              << std::setfill('0') << std::setw(2) << report_time.minute;
+}
+
+std::ostream& operator<<(std::ostream& os, ReportDateTime report_date_time) {
+    if (report_date_time.date == std::nullopt) {
+        return os << report_date_time.time;
+    }
+    return os << "On the " << std::setfill('0') << std::setw(2)
+              << Ordinals::to_ordinal_date(*report_date_time.date) << " "
+              << report_date_time.time;
 }

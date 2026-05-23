@@ -19,10 +19,18 @@ struct Pressure {
 };
 
 struct ReportTime {
-    int day;
-    int hour;
+    std::optional<int> hour;
     int minute;
 };
+
+std::ostream& operator<<(std::ostream& os, ReportTime report_time);
+
+struct ReportDateTime {
+    std::optional<int> date;
+    ReportTime time;
+};
+
+std::ostream& operator<<(std::ostream& os, ReportDateTime report_date_time);
 
 struct Variability {
     int from_value;
@@ -141,7 +149,7 @@ struct METAR {
     METAR();
     std::string type;
     std::string station_id;
-    std::optional<ReportTime> report_time;
+    std::optional<ReportDateTime> report_date_time;
     std::optional<ReportModifier> report_modifier;
     std::optional<Wind> wind;
     bool is_cavok;
