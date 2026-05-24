@@ -641,8 +641,8 @@ std::string METARParser::to_string() const {
             }
             oss << " " << metar_.wind->unit << "\n";
         } else {
-            oss << "from " << metar_.wind->direction << " at "
-                << metar_.wind->speed;
+            oss << "from " << std::setfill('0') << std::setw(3)
+                << metar_.wind->direction << " at " << metar_.wind->speed;
             if (metar_.wind->gust.has_value()) {
                 oss << " gusting " << metar_.wind->gust.value();
             }

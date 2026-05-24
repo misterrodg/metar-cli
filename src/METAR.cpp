@@ -172,6 +172,6 @@ std::ostream& operator<<(std::ostream& os, ReportDateTime report_date_time) {
         return os << report_date_time.time;
     }
     return os << "On the " << std::setfill('0') << std::setw(2)
-              << Ordinals::to_ordinal_date(*report_date_time.date) << " "
+              << Ordinals::to_ordinal_date(*report_date_time.date) << " at "
               << report_date_time.time;
 }
