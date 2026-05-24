@@ -131,7 +131,9 @@ struct RVR {
     std::string runway;
     std::optional<BoundaryStatus> boundary_status;
     std::optional<int> constant_distance;
+    std::optional<BoundaryStatus> variable_min_distance_status;
     std::optional<int> variable_min_distance;
+    std::optional<BoundaryStatus> variable_max_distance_status;
     std::optional<int> variable_max_distance;
     std::optional<VisibilityUnit> unit;
     std::optional<VisibilityTendency> tendency;

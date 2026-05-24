@@ -272,23 +272,43 @@ void METARParser::parse_rvr_block(TokenStream& ts) {
             constant_distance = std::stoi(match_results[5].str());
         }
 
+        std::optional<BoundaryStatus> variable_min_distance_status =
+            std::nullopt;
         std::optional<int> variable_min_distance = std::nullopt;
+        std::optional<BoundaryStatus> variable_max_distance_status =
+            std::nullopt;
         std::optional<int> variable_max_distance = std::nullopt;
-        if (match_results[6].matched && match_results[7].matched) {
-            variable_min_distance = std::stoi(match_results[6].str());
-            variable_max_distance = std::stoi(match_results[7].str());
+        if (match_results[7].matched && match_results[9].matched) {
+            variable_min_distance = std::stoi(match_results[7].str());
+            variable_max_distance = std::stoi(match_results[9].str());
+
+            std::string variable_min_distance_status_str =
+                match_results[6].str();
+            if (variable_min_distance_status_str == "P") {
+                variable_min_distance_status = BoundaryStatus::PLUS;
+            } else if (variable_min_distance_status_str == "M") {
+                variable_min_distance_status = BoundaryStatus::MINUS;
+            }
+
+            std::string variable_max_distance_status_str =
+                match_results[8].str();
+            if (variable_max_distance_status_str == "P") {
+                variable_max_distance_status = BoundaryStatus::PLUS;
+            } else if (variable_max_distance_status_str == "M") {
+                variable_max_distance_status = BoundaryStatus::MINUS;
+            }
         }
 
         // ICAO METAR RVR defaults to meters when no explicit unit suffix is
         // present.
         std::optional<VisibilityUnit> unit = VisibilityUnit::METERS;
-        std::string unit_str = match_results[8].str();
+        std::string unit_str = match_results[10].str();
         if (unit_str == "FT") {
             unit = VisibilityUnit::FEET;
         }
 
         std::optional<VisibilityTendency> tendency = std::nullopt;
-        std::string tendency_str = match_results[9].str();
+        std::string tendency_str = match_results[11].str();
         if (tendency_str == "U") {
             tendency = VisibilityTendency::INCREASING;
         } else if (tendency_str == "D") {
@@ -298,8 +318,10 @@ void METARParser::parse_rvr_block(TokenStream& ts) {
         }
 
         metar_.rvr.push_back(RVR{runway, boundary_status, constant_distance,
-                                 variable_min_distance, variable_max_distance,
-                                 unit, tendency});
+                                 variable_min_distance_status,
+                                 variable_min_distance,
+                                 variable_max_distance_status,
+                                 variable_max_distance, unit, tendency});
     }
 }
 
@@ -755,8 +777,15 @@ std::string METARParser::to_string() const {
                 }
             } else if (rvr.variable_min_distance.has_value() &&
                        rvr.variable_max_distance.has_value()) {
-                oss << "Variable from " << rvr.variable_min_distance.value()
-                    << " to " << rvr.variable_max_distance.value();
+                oss << "Variable from ";
+                if (rvr.variable_min_distance_status.has_value()) {
+                    oss << rvr.variable_min_distance_status.value() << " ";
+                }
+                oss << rvr.variable_min_distance.value() << " to ";
+                if (rvr.variable_max_distance_status.has_value()) {
+                    oss << rvr.variable_max_distance_status.value() << " ";
+                }
+                oss << rvr.variable_max_distance.value();
                 if (rvr.unit.has_value()) {
                     oss << " " << rvr.unit.value();
                 }
