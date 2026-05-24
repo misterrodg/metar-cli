@@ -9,6 +9,59 @@
 #include <sstream>
 #include <string>
 
+namespace {
+
+struct ParsedStatuteVisibility {
+    double value;
+    bool less_than;
+    int tokens_consumed;
+};
+
+std::optional<ParsedStatuteVisibility> parse_statute_visibility_tokens(
+    std::string_view first_token, std::string_view second_token,
+    std::string_view whole_pattern, std::string_view fraction_pattern,
+    std::string_view integer_pattern) {
+    std::smatch match_results;
+    const std::string first_token_string(first_token);
+    const std::string second_token_string(second_token);
+    const std::regex whole_regex = RegexUtils::make_token_regex(whole_pattern);
+    const std::regex fraction_regex =
+        RegexUtils::make_token_regex(fraction_pattern);
+    const std::regex integer_regex =
+        RegexUtils::make_token_regex(integer_pattern);
+
+    if (std::regex_match(first_token.begin(), first_token.end(), integer_regex) &&
+        std::regex_match(second_token.begin(), second_token.end(),
+                         fraction_regex)) {
+        const double whole = std::stod(first_token_string);
+        if (!std::regex_match(second_token_string, match_results,
+                              fraction_regex)) {
+            return std::nullopt;
+        }
+
+        const double numerator = std::stod(match_results[2].str());
+        const double denominator = std::stod(match_results[3].str());
+        return ParsedStatuteVisibility{
+            whole + (numerator / denominator), match_results[1].matched, 2};
+    }
+
+    if (std::regex_match(first_token_string, match_results, whole_regex)) {
+        return ParsedStatuteVisibility{
+            std::stod(match_results[1].str()), false, 1};
+    }
+
+    if (std::regex_match(first_token_string, match_results, fraction_regex)) {
+        const double numerator = std::stod(match_results[2].str());
+        const double denominator = std::stod(match_results[3].str());
+        return ParsedStatuteVisibility{numerator / denominator,
+                                       match_results[1].matched, 1};
+    }
+
+    return std::nullopt;
+}
+
+} // namespace
+
 METARParser::METARParser(const std::string& metar)
     : metar_string_(metar), metar_() {
     TokenStream tokens{split_on_whitespace(metar)};
@@ -171,49 +224,15 @@ void METARParser::parse_visibility(TokenStream& ts) {
         return;
     }
 
-    if (std::regex_match(
-            s.begin(), s.end(),
-            RegexUtils::make_token_regex(Patterns::VIS_WHOLE_SM)) ||
-        std::regex_match(
-            s.begin(), s.end(),
-            RegexUtils::make_token_regex(Patterns::VIS_FRACT_SM))) {
-        const std::string vis_token = ts.consume();
-        std::smatch match_results;
-        if (std::regex_match(
-                vis_token, match_results,
-                RegexUtils::make_token_regex(Patterns::VIS_WHOLE_SM))) {
-            metar_.visibility->value = std::stod(match_results[1].str());
-            metar_.visibility->unit = VisibilityUnit::STATUTE_MILES;
-        } else if (std::regex_match(
-                       vis_token, match_results,
-                       RegexUtils::make_token_regex(Patterns::VIS_FRACT_SM))) {
-            const bool less_than = match_results[1].matched;
-            const double numerator = std::stod(match_results[2].str());
-            const double denominator = std::stod(match_results[3].str());
-            metar_.visibility->value = numerator / denominator;
-            metar_.visibility->less_than = less_than;
-            metar_.visibility->unit = VisibilityUnit::STATUTE_MILES;
-        }
-        return;
-    }
-
-    if (std::regex_match(s.begin(), s.end(),
-                         RegexUtils::make_token_regex(Patterns::INTEGER)) &&
-        std::regex_match(
-            ts.peek(1).begin(), ts.peek(1).end(),
-            RegexUtils::make_token_regex(Patterns::VIS_FRACT_SM))) {
-        const double whole = std::stod(std::string(ts.consume()));
-        const std::string fraction_token = ts.consume();
-        std::smatch match_results;
-        if (std::regex_match(
-                fraction_token, match_results,
-                RegexUtils::make_token_regex(Patterns::VIS_FRACT_SM))) {
-            const bool less_than = match_results[1].matched;
-            const double numerator = std::stod(match_results[2].str());
-            const double denominator = std::stod(match_results[3].str());
-            metar_.visibility->value = whole + (numerator / denominator);
-            metar_.visibility->less_than = less_than;
-            metar_.visibility->unit = VisibilityUnit::STATUTE_MILES;
+    const auto parsed_statute_visibility = parse_statute_visibility_tokens(
+        s, ts.peek(1), Patterns::VIS_WHOLE_SM, Patterns::VIS_FRACT_SM,
+        Patterns::INTEGER);
+    if (parsed_statute_visibility.has_value()) {
+        metar_.visibility->value = parsed_statute_visibility->value;
+        metar_.visibility->less_than = parsed_statute_visibility->less_than;
+        metar_.visibility->unit = VisibilityUnit::STATUTE_MILES;
+        for (int i = 0; i < parsed_statute_visibility->tokens_consumed; ++i) {
+            ts.consume();
         }
     }
 }
@@ -514,6 +533,9 @@ void METARParser::parse_remark(TokenStream& ts) {
         if (parse_wind_shift(ts)) {
             continue;
         }
+        if (parse_surface_visibility(ts)) {
+            continue;
+        }
         ts.consume();
     }
 }
@@ -611,6 +633,53 @@ bool METARParser::parse_wind_shift(TokenStream& ts) {
     const int minute = std::stoi(match_results[2].str());
 
     metar_.wind_shift = WindShift{ReportTime{hour, minute}, frontal_passage};
+    return true;
+}
+
+bool METARParser::parse_surface_visibility(TokenStream& ts) {
+    if (ts.eof() || (ts.peek() != "SFC" && ts.peek() != "TWR") ||
+        ts.peek(1) != "VIS") {
+        return false;
+    }
+
+    const std::string type_token = std::string(ts.peek());
+    const std::string surface_vis_token = std::string(ts.peek(2));
+    const std::string fraction_token = std::string(ts.peek(3));
+
+    if (surface_vis_token.empty()) {
+        return false;
+    }
+
+    const auto parsed_statute_visibility = parse_statute_visibility_tokens(
+        surface_vis_token, fraction_token, Patterns::INTEGER,
+        Patterns::FRACTION, Patterns::INTEGER);
+    if (!parsed_statute_visibility.has_value()) {
+        return false;
+    }
+
+    // Consume SFC/TWR VIS and parsed visibility token(s).
+    ts.consume();
+    ts.consume();
+    for (int i = 0; i < parsed_statute_visibility->tokens_consumed; ++i) {
+        ts.consume();
+    }
+
+    bool greater_or_equal = false;
+
+    if (type_token == "SFC") {
+        metar_.surface_visibility =
+            SurfaceVisibility{SurfaceVisType::SFC,
+                              parsed_statute_visibility->value,
+                              parsed_statute_visibility->less_than,
+                              greater_or_equal};
+    } else if (type_token == "TWR") {
+        metar_.surface_visibility =
+            SurfaceVisibility{SurfaceVisType::TWR,
+                              parsed_statute_visibility->value,
+                              parsed_statute_visibility->less_than,
+                              greater_or_equal};
+    }
+
     return true;
 }
 
@@ -808,6 +877,20 @@ std::string METARParser::to_string() const {
             oss << " due to frontal passage";
         }
         oss << "\n";
+    }
+
+    if (metar_.surface_visibility.has_value()) {
+        oss << "\t\t" << metar_.surface_visibility->type << " ";
+        if (metar_.surface_visibility->less_than) {
+            oss << "less than ";
+        } else if (metar_.surface_visibility->greater_or_equal) {
+            oss << "at least ";
+        }
+        if (metar_.surface_visibility->value.has_value()) {
+            oss << *metar_.surface_visibility->value << " statute miles\n";
+        } else {
+            oss << "not reported\n";
+        }
     }
 
     return oss.str();

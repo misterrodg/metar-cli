@@ -156,6 +156,17 @@ struct WindShift {
     bool frontal_passage;
 };
 
+enum class SurfaceVisType { SFC, TWR, UNKNOWN };
+
+std::ostream& operator<<(std::ostream& os, SurfaceVisType type);
+
+struct SurfaceVisibility {
+    SurfaceVisType type;
+    std::optional<double> value;
+    bool less_than;
+    bool greater_or_equal;
+};
+
 struct METAR {
     METAR();
     std::string type;
@@ -179,6 +190,7 @@ struct METAR {
     std::optional<StationType> station_type;
     std::optional<PeakWind> peak_wind;
     std::optional<WindShift> wind_shift;
+    std::optional<SurfaceVisibility> surface_visibility;
 };
 
 #endif

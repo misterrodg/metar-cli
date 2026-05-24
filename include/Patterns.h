@@ -52,6 +52,12 @@ inline constexpr std::string_view VIS_FRACT_SM = R"((M)?(\d+)/(\d+)SM)";
 // 1 = integer
 inline constexpr std::string_view INTEGER = R"((\d+))";
 
+// Fraction Matching for Visibility
+// 1 = M if present
+// 2 = numerator
+// 3 = denominator
+inline constexpr std::string_view FRACTION = R"((M)?(\d+)/(\d+))";
+
 // Metric Visibility
 // 1 = meters
 inline constexpr std::string_view VIS_METERS = R"((\d{4}))";
@@ -118,6 +124,8 @@ inline constexpr std::string_view PEAK_WIND =
     R"(PK WND (\d{3})(\d{2,3})/(\d{4}|\d{2}))";
 
 inline constexpr std::string_view WIND_SHIFT = R"(WSHFT)";
+
+inline constexpr std::string_view SFC_TWR_VIS = R"(SFC|TWR)";
 
 } // namespace Patterns
 

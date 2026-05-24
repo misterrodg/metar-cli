@@ -10,7 +10,7 @@ METAR::METAR()
       is_nsc(false), is_ncd(false), cloud_coverage(), temperature(std::nullopt),
       dewpoint(std::nullopt), pressure(std::nullopt), has_remarks(false),
       station_type(std::nullopt), peak_wind(std::nullopt),
-      wind_shift(std::nullopt) {
+      wind_shift(std::nullopt), surface_visibility(std::nullopt) {
 }
 
 std::ostream& operator<<(std::ostream& os, Descriptor descriptor) {
@@ -174,4 +174,15 @@ std::ostream& operator<<(std::ostream& os, ReportDateTime report_date_time) {
     return os << "On the " << std::setfill('0') << std::setw(2)
               << Ordinals::to_ordinal_date(*report_date_time.date) << " at "
               << report_date_time.time;
+}
+
+std::ostream& operator<<(std::ostream& os, SurfaceVisType type) {
+    switch (type) {
+    case SurfaceVisType::SFC:
+        return os << "Surface visibility";
+    case SurfaceVisType::TWR:
+        return os << "Tower visibility";
+    default:
+        return os << "unknown surface visibility type";
+    }
 }
