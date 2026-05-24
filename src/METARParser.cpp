@@ -30,7 +30,8 @@ std::optional<ParsedStatuteVisibility> parse_statute_visibility_tokens(
     const std::regex integer_regex =
         RegexUtils::make_token_regex(integer_pattern);
 
-    if (std::regex_match(first_token.begin(), first_token.end(), integer_regex) &&
+    if (std::regex_match(first_token.begin(), first_token.end(),
+                         integer_regex) &&
         std::regex_match(second_token.begin(), second_token.end(),
                          fraction_regex)) {
         const double whole = std::stod(first_token_string);
@@ -41,8 +42,8 @@ std::optional<ParsedStatuteVisibility> parse_statute_visibility_tokens(
 
         const double numerator = std::stod(match_results[2].str());
         const double denominator = std::stod(match_results[3].str());
-        return ParsedStatuteVisibility{
-            whole + (numerator / denominator), match_results[1].matched, 2};
+        return ParsedStatuteVisibility{whole + (numerator / denominator),
+                                       match_results[1].matched, 2};
     }
 
     if (std::regex_match(first_token_string, match_results, whole_regex)) {
@@ -689,17 +690,13 @@ bool METARParser::parse_surface_visibility(TokenStream& ts) {
     bool greater_or_equal = false;
 
     if (type_token == "SFC") {
-        metar_.surface_visibility =
-            SurfaceVisibility{SurfaceVisType::SFC,
-                              parsed_statute_visibility->value,
-                              parsed_statute_visibility->less_than,
-                              greater_or_equal};
+        metar_.surface_visibility = SurfaceVisibility{
+            SurfaceVisType::SFC, parsed_statute_visibility->value,
+            parsed_statute_visibility->less_than, greater_or_equal};
     } else if (type_token == "TWR") {
-        metar_.surface_visibility =
-            SurfaceVisibility{SurfaceVisType::TWR,
-                              parsed_statute_visibility->value,
-                              parsed_statute_visibility->less_than,
-                              greater_or_equal};
+        metar_.surface_visibility = SurfaceVisibility{
+            SurfaceVisType::TWR, parsed_statute_visibility->value,
+            parsed_statute_visibility->less_than, greater_or_equal};
     }
 
     return true;
