@@ -8,6 +8,7 @@
 #include <regex>
 #include <sstream>
 #include <string>
+#include <utility>
 
 namespace {
 
@@ -59,6 +60,59 @@ std::optional<ParsedStatuteVisibility> parse_statute_visibility_tokens(
     }
 
     return std::nullopt;
+}
+
+using VariableVisibilityComponent =
+    std::pair<std::optional<BoundaryStatus>, double>;
+
+struct ParsedVariableVisibilityComponent {
+    VariableVisibilityComponent component;
+    int tokens_consumed;
+};
+
+std::optional<ParsedVariableVisibilityComponent>
+parse_variable_visibility_component_tokens(std::string first_token,
+                                           std::string second_token) {
+    std::smatch component_match;
+    if (std::regex_match(first_token, component_match,
+                         RegexUtils::make_exact_regex(R"(([MP])?(\d{4}))"))) {
+        std::optional<BoundaryStatus> status = std::nullopt;
+        const std::string status_token = component_match[1].str();
+        if (status_token == "M") {
+            status = BoundaryStatus::MINUS;
+        } else if (status_token == "P") {
+            status = BoundaryStatus::PLUS;
+        }
+        return ParsedVariableVisibilityComponent{
+            std::make_pair(status,
+                           static_cast<double>(
+                               std::stoi(component_match[2].str()))),
+            1};
+    }
+
+    if (first_token.size() >= 2 &&
+        first_token.compare(first_token.size() - 2, 2, "SM") == 0) {
+        first_token.resize(first_token.size() - 2);
+    }
+    if (second_token.size() >= 2 &&
+        second_token.compare(second_token.size() - 2, 2, "SM") == 0) {
+        second_token.resize(second_token.size() - 2);
+    }
+
+    const auto parsed = parse_statute_visibility_tokens(
+        first_token, second_token, Patterns::INTEGER, Patterns::FRACTION,
+        Patterns::INTEGER);
+    if (!parsed.has_value()) {
+        return std::nullopt;
+    }
+
+    std::optional<BoundaryStatus> status = std::nullopt;
+    if (parsed->less_than) {
+        status = BoundaryStatus::MINUS;
+    }
+
+    return ParsedVariableVisibilityComponent{
+        std::make_pair(status, parsed->value), parsed->tokens_consumed};
 }
 
 } // namespace
@@ -559,6 +613,9 @@ void METARParser::parse_remark(TokenStream& ts) {
         if (parse_surface_visibility(ts)) {
             continue;
         }
+        if (parse_variable_visibility(ts)) {
+            continue;
+        }
         ts.consume();
     }
 }
@@ -699,6 +756,63 @@ bool METARParser::parse_surface_visibility(TokenStream& ts) {
             parsed_statute_visibility->less_than, greater_or_equal};
     }
 
+    return true;
+}
+
+bool METARParser::parse_variable_visibility(TokenStream& ts) {
+    if (ts.eof() || ts.peek() != "VIS") {
+        return false;
+    }
+
+    const std::string token1 = std::string(ts.peek(1));
+    const std::string token2 = std::string(ts.peek(2));
+    if (token1.empty()) {
+        return false;
+    }
+
+    const std::regex variable_vis_split_regex =
+        RegexUtils::make_exact_regex(R"(([^V\s]+)V([^V\s]+))");
+
+    std::string min_first_token;
+    std::string min_second_token;
+    std::string max_first_token;
+    int tokens_consumed_before_max = 0;
+
+    std::smatch token_match;
+    if (std::regex_match(token1, token_match, variable_vis_split_regex)) {
+        min_first_token = token_match[1].str();
+        min_second_token = "";
+        max_first_token = token_match[2].str();
+        tokens_consumed_before_max = 1;
+    } else if (!token2.empty() && std::regex_match(token2, token_match,
+                                                   variable_vis_split_regex)) {
+        min_first_token = token1;
+        min_second_token = token_match[1].str();
+        max_first_token = token_match[2].str();
+        tokens_consumed_before_max = 2;
+    } else {
+        return false;
+    }
+
+    const auto min_component = parse_variable_visibility_component_tokens(
+        min_first_token, min_second_token);
+    const auto max_component = parse_variable_visibility_component_tokens(
+        max_first_token, std::string(ts.peek(tokens_consumed_before_max + 1)));
+    if (!min_component.has_value() || !max_component.has_value()) {
+        return false;
+    }
+
+    ts.consume(); // VIS
+    for (int i = 0; i < tokens_consumed_before_max; ++i) {
+        ts.consume();
+    }
+    if (max_component->tokens_consumed == 2) {
+        ts.consume(); // trailing fraction token for max visibility component
+    }
+
+    metar_.variable_visibility = VariableVisibility{
+        min_component->component.first, min_component->component.second,
+        max_component->component.first, max_component->component.second};
     return true;
 }
 
@@ -916,6 +1030,35 @@ std::string METARParser::to_string() const {
             oss << *metar_.surface_visibility->value << " statute miles\n";
         } else {
             oss << "not reported\n";
+        }
+    }
+
+    if (metar_.variable_visibility.has_value()) {
+        oss << "\t\tVariable visibility from ";
+        if (metar_.variable_visibility->variable_min_distance_status ==
+            BoundaryStatus::MINUS) {
+            oss << "less than ";
+        } else if (metar_.variable_visibility->variable_min_distance_status ==
+                   BoundaryStatus::PLUS) {
+            oss << "at least ";
+        }
+        if (metar_.variable_visibility->variable_min_distance.has_value()) {
+            oss << *metar_.variable_visibility->variable_min_distance << " to ";
+        } else {
+            oss << "unknown to ";
+        }
+        if (metar_.variable_visibility->variable_max_distance_status ==
+            BoundaryStatus::MINUS) {
+            oss << "less than ";
+        } else if (metar_.variable_visibility->variable_max_distance_status ==
+                   BoundaryStatus::PLUS) {
+            oss << "at least ";
+        }
+        if (metar_.variable_visibility->variable_max_distance.has_value()) {
+            oss << *metar_.variable_visibility->variable_max_distance
+                << " statute miles\n";
+        } else {
+            oss << "unknown\n";
         }
     }
 

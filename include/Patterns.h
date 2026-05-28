@@ -129,6 +129,8 @@ inline constexpr std::string_view WIND_SHIFT = R"(WSHFT)";
 
 inline constexpr std::string_view SFC_TWR_VIS = R"(SFC|TWR)";
 
+inline constexpr std::string_view VARIABLE_VIS = R"(VIS)";
+
 } // namespace Patterns
 
 #endif

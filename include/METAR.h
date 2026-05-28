@@ -169,6 +169,13 @@ struct SurfaceVisibility {
     bool greater_or_equal;
 };
 
+struct VariableVisibility {
+    std::optional<BoundaryStatus> variable_min_distance_status;
+    std::optional<double> variable_min_distance;
+    std::optional<BoundaryStatus> variable_max_distance_status;
+    std::optional<double> variable_max_distance;
+};
+
 struct METAR {
     METAR();
     std::string type;
@@ -193,6 +200,7 @@ struct METAR {
     std::optional<PeakWind> peak_wind;
     std::optional<WindShift> wind_shift;
     std::optional<SurfaceVisibility> surface_visibility;
+    std::optional<VariableVisibility> variable_visibility;
 };
 
 #endif

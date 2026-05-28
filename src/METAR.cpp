@@ -10,7 +10,8 @@ METAR::METAR()
       is_nsc(false), is_ncd(false), cloud_coverage(), temperature(std::nullopt),
       dewpoint(std::nullopt), pressure(std::nullopt), has_remarks(false),
       station_type(std::nullopt), peak_wind(std::nullopt),
-      wind_shift(std::nullopt), surface_visibility(std::nullopt) {
+      wind_shift(std::nullopt), surface_visibility(std::nullopt),
+      variable_visibility(std::nullopt) {
 }
 
 std::ostream& operator<<(std::ostream& os, Descriptor descriptor) {

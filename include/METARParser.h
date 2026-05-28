@@ -33,6 +33,7 @@ private:
     bool parse_peak_wind(TokenStream& ts);
     bool parse_wind_shift(TokenStream& ts);
     bool parse_surface_visibility(TokenStream& ts);
+    bool parse_variable_visibility(TokenStream& ts);
 };
 
 #endif
