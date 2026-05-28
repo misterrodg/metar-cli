@@ -48,8 +48,8 @@ std::optional<ParsedStatuteVisibility> parse_statute_visibility_tokens(
     }
 
     if (std::regex_match(first_token_string, match_results, whole_regex)) {
-        return ParsedStatuteVisibility{
-            std::stod(match_results[1].str()), false, 1};
+        return ParsedStatuteVisibility{std::stod(match_results[1].str()), false,
+                                       1};
     }
 
     if (std::regex_match(first_token_string, match_results, fraction_regex)) {
