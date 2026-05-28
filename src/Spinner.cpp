@@ -2,7 +2,15 @@
 
 #include <chrono>
 #include <iostream>
+#include <string>
 #include <thread>
+
+static constexpr char FETCH_LABEL[] = "Fetching METAR ";
+static constexpr char FRAMES[] = {'|', '/', '-', '\\'};
+
+static void clear_status_line(std::ostream& os, std::size_t line_width) {
+    os << '\r' << std::string(line_width, ' ') << '\r' << std::flush;
+}
 
 Spinner::Spinner() : running_(false) {
 }
@@ -22,16 +30,15 @@ void Spinner::stop() {
         if (thread_.joinable()) {
             thread_.join();
         }
-        std::cout << "\r \r" << std::flush;
+        clear_status_line(std::cout, sizeof(FETCH_LABEL));
     }
 }
 
 void Spinner::spin() {
-    const char frames[] = {'|', '/', '-', '\\'};
     int i = 0;
 
     while (running_) {
-        std::cout << "\rFetching METAR " << frames[i++ % 4] << std::flush;
+        std::cout << '\r' << FETCH_LABEL << FRAMES[i++ % 4] << std::flush;
         std::this_thread::sleep_for(std::chrono::milliseconds(120));
     }
 }

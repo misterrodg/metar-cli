@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cctype>
 #include <sstream>
+#include <stdexcept>
 #include <string>
 
 std::string join_strings(const std::vector<std::string>& inputs,
@@ -32,6 +33,25 @@ std::vector<std::string> split_strings(const std::string& input,
     }
 
     return tokens;
+}
+
+std::vector<std::string> split_on_whitespace(std::string_view input) {
+    std::vector<std::string> result;
+    size_t i = 0;
+    while (i < input.size()) {
+        while (i < input.size() &&
+               std::isspace(static_cast<unsigned char>(input[i])))
+            ++i;
+        if (i >= input.size())
+            break;
+        size_t j = i;
+        while (j < input.size() &&
+               !std::isspace(static_cast<unsigned char>(input[j])))
+            ++j;
+        result.emplace_back(input.substr(i, j - i));
+        i = j;
+    }
+    return result;
 }
 
 void to_uppercase(std::string& input) {
@@ -77,4 +97,9 @@ std::optional<double> parse_fractional_number(const std::string& input) {
     }
 
     return std::nullopt;
+}
+
+void expect(bool ok, const char* msg) {
+    if (!ok)
+        throw std::runtime_error(msg);
 }

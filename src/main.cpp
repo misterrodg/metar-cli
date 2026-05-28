@@ -16,10 +16,17 @@ int main(int argc, char* argv[]) {
 
     ArgParser airport_args = ArgParser(argc, argv);
     std::string airport_string = airport_args.get_airport_string();
+    std::string metar_string = airport_args.get_metar_string();
     bool use_translation = airport_args.should_translate();
+    bool use_metar_string = airport_args.should_use_metar();
 
-    if (airport_string.empty()) {
+    if (airport_string.empty() && !use_metar_string) {
         fprintf(stderr, "Error: airport_id required.\n");
+        return 1;
+    }
+
+    if (metar_string.empty() && use_metar_string) {
+        fprintf(stderr, "Error: METAR switch provided with no METAR string.\n");
         return 1;
     }
 
@@ -29,11 +36,20 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    Spinner spinner;
+    if (metar_string.empty()) {
+        Spinner spinner;
 
-    spinner.start();
-    std::string metar_string = fetch_metar(airport_string);
-    spinner.stop();
+        spinner.start();
+        metar_string = fetch_metar(airport_string);
+        spinner.stop();
+
+        if (metar_string.empty()) {
+            fprintf(stderr,
+                    "Error: failed to fetch METAR data for %s.\n",
+                    airport_string.c_str());
+            return 1;
+        }
+    }
 
     printf("%s\n", metar_string.c_str());
 

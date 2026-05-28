@@ -5,12 +5,30 @@
 
 #include <regex>
 
-ArgParser::ArgParser(int argc, char* const argv[]) : should_translate_(false) {
+ArgParser::ArgParser(int argc, char* const argv[])
+    : metar_string_(""), should_translate_(false), should_use_metar_(false) {
+    std::string_view metar_prefix_l = "--METAR=";
+    std::string_view metar_prefix_s = "-M=";
+    std::string_view translate_l = "--TRANSLATE";
+    std::string_view translate_s = "-T";
+
     for (int i = 1; i < argc; ++i) {
         std::string arg = argv[i];
         to_uppercase(arg);
 
-        if (arg == "--TRANSLATE" || arg == "-T") {
+        if (arg.substr(0, metar_prefix_s.size()) == metar_prefix_s) {
+            should_use_metar_ = true;
+            metar_string_ = arg.substr(metar_prefix_s.size());
+            continue;
+        }
+
+        if (arg.substr(0, metar_prefix_l.size()) == metar_prefix_l) {
+            should_use_metar_ = true;
+            metar_string_ = arg.substr(metar_prefix_l.size());
+            continue;
+        }
+
+        if (arg == translate_l || arg == translate_s) {
             should_translate_ = true;
             continue;
         }
@@ -25,6 +43,14 @@ ArgParser::ArgParser(int argc, char* const argv[]) : should_translate_(false) {
 
 bool ArgParser::should_translate() const {
     return should_translate_;
+}
+
+bool ArgParser::should_use_metar() const {
+    return should_use_metar_;
+}
+
+std::string ArgParser::get_metar_string() const {
+    return metar_string_;
 }
 
 const std::vector<std::string>& ArgParser::get_airports() const {

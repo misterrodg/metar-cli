@@ -9,6 +9,9 @@ public:
     ArgParser(int argc, char* const argv[]);
 
     bool should_translate() const;
+    bool should_use_metar() const;
+
+    std::string get_metar_string() const;
 
     const std::vector<std::string>& get_airports() const;
     std::string get_airport_string() const;
@@ -19,6 +22,8 @@ public:
 
 private:
     bool should_translate_;
+    bool should_use_metar_;
+    std::string metar_string_;
     std::vector<std::string> airports_;
     std::vector<std::string> invalid_args_;
 
